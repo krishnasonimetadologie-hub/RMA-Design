@@ -562,9 +562,6 @@
     "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com";
   const OAUTH_URL = SF_INSTANCE + "/services/oauth2/token";
   const API_ENDPOINT = SF_INSTANCE + "/services/apexrest/caseManagement/";
-  
-  // SalesForce Web-to-Case endpoint
-  const WEB_TO_CASE_URL = "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8&orgId=00DVA000007Hanq";
 
   /* ================= MODALS ================= */
   function showModal(type, title, message) {
@@ -634,49 +631,6 @@
     return await res.json();
   }
 
-  /* ================= FORM DATA COLLECTION ================= */
-  function collectFormData() {
-    const form = document.getElementById('rmaForm');
-    const formData = new FormData(form);
-    
-    // Convert FormData to URL-encoded string
-    const params = new URLSearchParams();
-    for (const [key, value] of formData.entries()) {
-      params.append(key, value);
-    }
-    
-    return params.toString();
-  }
-
-  /* ================= AJAX FORM SUBMISSION ================= */
-  async function submitFormToSalesforce(formData) {
-    try {
-      const response = await fetch(WEB_TO_CASE_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData
-      });
-      
-      // SalesForce Web-to-Case typically returns a redirect HTML
-      // We just need to know if the request was successful
-      if (response.ok) {
-        return { success: true };
-      } else {
-        return { 
-          success: false, 
-          error: `Submission failed with status: ${response.status}` 
-        };
-      }
-    } catch (error) {
-      return { 
-        success: false, 
-        error: `Network error: ${error.message}` 
-      };
-    }
-  }
-
   /* ================= FORM SUBMIT OVERRIDE ================= */
   document
     .getElementById("rmaForm")
@@ -724,35 +678,9 @@
         updateLoading("Sales Order Verified", 80);
         updateLoading("Submitting Request...", 95);
 
-        // Collect form data and submit via AJAX
-        const formData = collectFormData();
-        const submissionResult = await submitFormToSalesforce(formData);
-        
+        /* ✅ PROCEED WITH STANDARD WEB-TO-CASE */
         hideLoading();
-        
-        if (submissionResult.success) {
-          showModal(
-            "success",
-            "Submission Successful",
-            "Your RMA request has been submitted successfully. A confirmation email will be sent shortly."
-          );
-          
-          // Optionally reset the form after successful submission
-          setTimeout(() => {
-            document.getElementById("rmaForm").reset();
-            document.getElementById("totalTime").value = "";
-            document.getElementById("totalCycle").value = "";
-          }, 2000);
-          
-        } else {
-          showModal(
-            "error",
-            "Submission Failed",
-            `There was an error submitting your request: ${submissionResult.error}`
-          );
-        }
-        
-        submitBtn.disabled = false;
+        this.submit();
 
       } catch (err) {
         console.error(err);
@@ -760,7 +688,7 @@
         showModal(
           "error",
           "Submission Failed",
-          "Unable to process your request. Please try again."
+          "Unable to verify Sales Order. Please try again."
         );
         submitBtn.disabled = false;
       }
