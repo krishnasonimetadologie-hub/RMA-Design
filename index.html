@@ -679,8 +679,9 @@
         updateLoading("Submitting Request...", 95);
 
         /* ✅ PROCEED WITH STANDARD WEB-TO-CASE */
+        await submitWebToCase(this);
         hideLoading();
-        this.submit();
+        
 
       } catch (err) {
         console.error(err);
@@ -693,6 +694,18 @@
         submitBtn.disabled = false;
       }
     });
+    function submitWebToCase(form) {
+      const formData = new FormData(form);
+    
+      await fetch(
+        "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8",
+        {
+          method: "POST",
+          body: formData,
+          mode: "no-cors" // REQUIRED for Salesforce
+        }
+      );
+    }
 
   /* ================= DATE CALCULATIONS ================= */
   function daysBetween(date) {
