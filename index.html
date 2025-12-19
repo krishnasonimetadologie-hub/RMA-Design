@@ -552,8 +552,12 @@
       </div>
     </div>
 
-    <script>
 
+
+
+
+
+  <script>
   /* ================= SALESFORCE CONFIG ================= */
   const CLIENT_ID =
     "3MVG9O_Hkc8TP1aFEeEWU9ZyX2f05bkHPl2XawuPFSJwal8ZF1mDPue9o0kPDBVcOU64PRCCEZnQq2aIJmKv5";
@@ -720,6 +724,27 @@
     });
   }
 
+  /* ================= SIMPLE DATE CONVERSION ================= */
+  function convertDatesToText() {
+    // Get all date inputs
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    
+    dateInputs.forEach(input => {
+      if (input.value) {
+        // Store the original value (already in YYYY-MM-DD format from date input)
+        const originalValue = input.value;
+        
+        // Change type to text
+        input.type = 'text';
+        
+        // Set the value as text (it's already in YYYY-MM-DD format)
+        input.value = originalValue;
+        
+        console.log(`Converted ${input.name} to text: ${originalValue}`);
+      }
+    });
+  }
+
   /* ================= FORM SUBMIT OVERRIDE ================= */
   function setupFormSubmit() {
     const form = document.getElementById("rmaForm");
@@ -766,10 +791,16 @@
         }
 
         updateLoading("Sales Order Verified", 80);
+        
+        // Convert all date inputs to text before submission
+        updateLoading("Preparing data...", 85);
+        convertDatesToText();
+        
         updateLoading("Submitting Request...", 95);
 
         /* ✅ PROCEED WITH STANDARD WEB-TO-CASE */
-        await submitWebToCase(this);
+        // Use traditional form submission
+        await submitWebToCase(form);
         updateLoading("Submission Complete", 100);
         
         // Small delay to show 100%
@@ -785,7 +816,7 @@
         }, 500);
 
       } catch (err) {
-        console.error(err);
+        console.error("Submission error:", err);
         hideLoading();
         showModal(
           "error",
@@ -798,22 +829,29 @@
   }
 
   async function submitWebToCase(form) {
+    // Create form data
     const formData = new FormData(form);
     
-    // Use a try-catch for better error handling
-    try {
-      await fetch(
-        "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8",
-        {
-          method: "POST",
-          body: formData,
-          mode: "no-cors" // REQUIRED for Salesforce
-        }
-      );
-    } catch (error) {
-      console.error("Web-to-case submission error:", error);
-      throw error;
+    // Convert to URL encoded string for better compatibility
+    const params = new URLSearchParams();
+    for (let [key, value] of formData.entries()) {
+      params.append(key, value);
     }
+    
+    console.log("Submitting with data:", params.toString());
+    
+    // Submit to Salesforce
+    await fetch(
+      "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8",
+      {
+        method: "POST",
+        body: params,
+        mode: "no-cors",
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
   }
 
   /* ================= INITIALIZE WHEN DOM IS READY ================= */
@@ -822,6 +860,11 @@
     setupFormSubmit();
   });
 </script>
+
+
+
+
+
 
   </body>
 </html>
