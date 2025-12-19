@@ -553,6 +553,7 @@
     </div>
 
     <script>
+
   /* ================= SALESFORCE CONFIG ================= */
   const CLIENT_ID =
     "3MVG9O_Hkc8TP1aFEeEWU9ZyX2f05bkHPl2XawuPFSJwal8ZF1mDPue9o0kPDBVcOU64PRCCEZnQq2aIJmKv5";
@@ -631,10 +632,99 @@
     return await res.json();
   }
 
+  /* ================= DATE CALCULATIONS ================= */
+  function daysBetween(date) {
+    if (!date) return "";
+    
+    // Parse the input date
+    const givenDate = new Date(date);
+    const today = new Date();
+    
+    // Reset time parts to compare only dates
+    givenDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
+    // Calculate difference in milliseconds
+    const diffTime = today.getTime() - givenDate.getTime();
+    
+    // Convert milliseconds to days
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Return only if it's a non-negative number
+    return diffDays >= 0 ? diffDays.toString() : "";
+  }
+
+  function setupDateCalculations() {
+    const installDateInput = document.getElementById("installDate");
+    const removalDateInput = document.getElementById("removalDate");
+    const totalTimeField = document.getElementById("totalTime");
+    const totalCycleField = document.getElementById("totalCycle");
+
+    // Install Date change handler
+    installDateInput.addEventListener('change', () => {
+      const installDateValue = installDateInput.value;
+      
+      if (!installDateValue) {
+        totalTimeField.value = "";
+        return;
+      }
+      
+      const installDateTime = new Date(installDateValue);
+      const today = new Date();
+      
+      // Check if install date is in the future
+      if (installDateTime > today) {
+        alert("Install Date cannot be in the future.");
+        installDateInput.value = "";
+        totalTimeField.value = "";
+        return;
+      }
+      
+      // Calculate and set days
+      const days = daysBetween(installDateValue);
+      totalTimeField.value = days;
+    });
+
+    // Removal Date change handler
+    removalDateInput.addEventListener('change', () => {
+      const installDateValue = installDateInput.value;
+      const removalDateValue = removalDateInput.value;
+      
+      if (!removalDateValue) {
+        totalCycleField.value = "";
+        return;
+      }
+      
+      const removalDateTime = new Date(removalDateValue);
+      const today = new Date();
+      
+      // Check if removal date is in the future
+      if (removalDateTime > today) {
+        alert("Removal Date cannot be in the future.");
+        removalDateInput.value = "";
+        totalCycleField.value = "";
+        return;
+      }
+      
+      // Check if install date exists and removal date is before it
+      if (installDateValue && removalDateTime < new Date(installDateValue)) {
+        alert("Removal Date cannot be before Install Date.");
+        removalDateInput.value = "";
+        totalCycleField.value = "";
+        return;
+      }
+      
+      // Calculate and set days
+      const days = daysBetween(removalDateValue);
+      totalCycleField.value = days;
+    });
+  }
+
   /* ================= FORM SUBMIT OVERRIDE ================= */
-  document
-    .getElementById("rmaForm")
-    .addEventListener("submit", async function (e) {
+  function setupFormSubmit() {
+    const form = document.getElementById("rmaForm");
+    
+    form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
       const soInput = document.getElementById("soField");
@@ -680,8 +770,19 @@
 
         /* ✅ PROCEED WITH STANDARD WEB-TO-CASE */
         await submitWebToCase(this);
-        hideLoading();
+        updateLoading("Submission Complete", 100);
         
+        // Small delay to show 100%
+        setTimeout(() => {
+          hideLoading();
+          showModal(
+            "success",
+            "Success!",
+            "Your RMA request has been submitted successfully."
+          );
+          form.reset();
+          submitBtn.disabled = false;
+        }, 500);
 
       } catch (err) {
         console.error(err);
@@ -694,9 +795,13 @@
         submitBtn.disabled = false;
       }
     });
-    function submitWebToCase(form) {
-      const formData = new FormData(form);
+  }
+
+  async function submitWebToCase(form) {
+    const formData = new FormData(form);
     
+    // Use a try-catch for better error handling
+    try {
       await fetch(
         "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8",
         {
@@ -705,37 +810,17 @@
           mode: "no-cors" // REQUIRED for Salesforce
         }
       );
+    } catch (error) {
+      console.error("Web-to-case submission error:", error);
+      throw error;
     }
-
-  /* ================= DATE CALCULATIONS ================= */
-  function daysBetween(date) {
-    if (!date) return "";
-    const diff = new Date() - new Date(date);
-    return diff >= 0 ? Math.floor(diff / 86400000) : "";
   }
 
-  installDate.onchange = () => {
-    if (new Date(installDate.value) > new Date()) {
-      alert("Install Date cannot be in the future.");
-      installDate.value = "";
-      totalTime.value = "";
-      return;
-    }
-    totalTime.value = daysBetween(installDate.value);
-  };
-
-  removalDate.onchange = () => {
-    if (
-      installDate.value &&
-      new Date(removalDate.value) < new Date(installDate.value)
-    ) {
-      alert("Removal Date cannot be before Install Date.");
-      removalDate.value = "";
-      totalCycle.value = "";
-      return;
-    }
-    totalCycle.value = daysBetween(removalDate.value);
-  };
+  /* ================= INITIALIZE WHEN DOM IS READY ================= */
+  document.addEventListener('DOMContentLoaded', function() {
+    setupDateCalculations();
+    setupFormSubmit();
+  });
 </script>
 
   </body>
