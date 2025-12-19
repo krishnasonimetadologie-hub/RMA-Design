@@ -413,6 +413,12 @@
             <input name="00NVA00000BAHHN" required />
           </div>
 
+
+
+
+
+          
+          <!-- Original Transaction date -->
           <div class="field">
             <label>Original Transaction date</label>
             <input 
@@ -421,11 +427,17 @@
               type="text" 
               pattern="(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])-\d{4}" 
               placeholder="MM-DD-YYYY" 
-              onfocus="showDatePicker(this)"
             />
+            <div class="help-text">Format: MM-DD-YYYY (e.g., 12-25-2023)</div>
           </div>
 
 
+
+
+
+
+
+          
           <div class="field">
             <label>Original Inv #</label>
             <input name="00NVA00000BAGy1" />
@@ -451,6 +463,13 @@
             <input name="00NVA0000095Lt5" required />
           </div>
 
+
+
+
+
+
+          
+          <!-- Install Date -->
           <div class="field">
             <label class="required">Install Date</label>
             <input
@@ -460,9 +479,17 @@
               pattern="(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])-\d{4}"
               placeholder="MM-DD-YYYY"
               required
-              onfocus="showDatePicker(this)"
             />
+            <div class="help-text">Format: MM-DD-YYYY (e.g., 12-25-2023)</div>
           </div>
+
+
+
+
+
+
+
+          
 
           <div class="field">
             <label class="required"
@@ -470,6 +497,10 @@
             >
             <input id="totalTime" name="00NVA00000AyWfB" readonly required />
           </div>
+
+
+
+
 
           
           <div class="field">
@@ -480,10 +511,16 @@
               type="text" 
               pattern="(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])-\d{4}" 
               placeholder="MM-DD-YYYY" 
-              onfocus="showDatePicker(this)"
             />
+            <div class="help-text">Format: MM-DD-YYYY (e.g., 12-25-2023)</div>
           </div>
 
+
+
+
+
+
+          
           
           <div class="field">
             <label class="required"
@@ -577,7 +614,9 @@
 
 
 
- <script>
+
+
+    <script>
   /* ================= SALESFORCE CONFIG ================= */
   const CLIENT_ID =
     "3MVG9O_Hkc8TP1aFEeEWU9ZyX2f05bkHPl2XawuPFSJwal8ZF1mDPue9o0kPDBVcOU64PRCCEZnQq2aIJmKv5";
@@ -658,6 +697,8 @@
 
   /* ================= DATE VALIDATION ================= */
   function validateDateInput(dateString) {
+    if (!dateString) return true; // Empty is valid
+    
     // Check format MM-DD-YYYY
     const pattern = /^(\d{2})-(\d{2})-(\d{4})$/;
     if (!pattern.test(dateString)) return false;
@@ -729,40 +770,6 @@
     return diffDays >= 0 ? diffDays.toString() : "";
   }
 
-  /* ================= DATE PICKER HELPERS ================= */
-  function showDatePicker(input) {
-    // Create a date picker dialog
-    const tempInput = document.createElement('input');
-    tempInput.type = 'date';
-    tempInput.style.position = 'fixed';
-    tempInput.style.top = '-100px';
-    tempInput.style.left = '0';
-    document.body.appendChild(tempInput);
-    
-    tempInput.focus();
-    
-    tempInput.addEventListener('change', function() {
-      if (this.value) {
-        // Convert from YYYY-MM-DD to MM-DD-YYYY
-        const parts = this.value.split('-');
-        if (parts.length === 3) {
-          const formattedDate = `${parts[1]}-${parts[2]}-${parts[0]}`;
-          input.value = formattedDate;
-          input.dispatchEvent(new Event('change'));
-        }
-      }
-      document.body.removeChild(tempInput);
-    });
-    
-    tempInput.addEventListener('blur', function() {
-      setTimeout(() => {
-        if (document.body.contains(tempInput)) {
-          document.body.removeChild(tempInput);
-        }
-      }, 100);
-    });
-  }
-
   function setupDateCalculations() {
     const originalTransactionDateInput = document.getElementById("originalTransactionDate");
     const installDateInput = document.getElementById("installDate");
@@ -772,12 +779,13 @@
 
     // Original Transaction Date change handler
     if (originalTransactionDateInput) {
-      originalTransactionDateInput.addEventListener('change', () => {
-        const dateValue = originalTransactionDateInput.value;
+      originalTransactionDateInput.addEventListener('blur', () => {
+        const dateValue = originalTransactionDateInput.value.trim();
         
         if (dateValue && !validateDateInput(dateValue)) {
-          alert("Please enter Original Transaction Date in MM-DD-YYYY format.");
+          alert("Please enter Original Transaction Date in MM-DD-YYYY format (e.g., 12-25-2023).");
           originalTransactionDateInput.value = "";
+          originalTransactionDateInput.focus();
           return;
         }
         
@@ -789,8 +797,8 @@
     }
 
     // Install Date change handler
-    installDateInput.addEventListener('change', () => {
-      const installDateValue = installDateInput.value;
+    installDateInput.addEventListener('blur', () => {
+      const installDateValue = installDateInput.value.trim();
       
       if (!installDateValue) {
         totalTimeField.value = "";
@@ -799,9 +807,10 @@
       
       // Validate date format
       if (!validateDateInput(installDateValue)) {
-        alert("Please enter Install Date in MM-DD-YYYY format.");
+        alert("Please enter Install Date in MM-DD-YYYY format (e.g., 12-25-2023).");
         installDateInput.value = "";
         totalTimeField.value = "";
+        installDateInput.focus();
         return;
       }
       
@@ -831,9 +840,9 @@
     });
 
     // Removal Date change handler
-    removalDateInput.addEventListener('change', () => {
-      const installDateValue = installDateInput.value;
-      const removalDateValue = removalDateInput.value;
+    removalDateInput.addEventListener('blur', () => {
+      const installDateValue = installDateInput.value.trim();
+      const removalDateValue = removalDateInput.value.trim();
       
       if (!removalDateValue) {
         totalCycleField.value = "";
@@ -842,9 +851,10 @@
       
       // Validate date format
       if (!validateDateInput(removalDateValue)) {
-        alert("Please enter Removal Date in MM-DD-YYYY format.");
+        alert("Please enter Removal Date in MM-DD-YYYY format (e.g., 12-25-2023).");
         removalDateInput.value = "";
         totalCycleField.value = "";
+        removalDateInput.focus();
         return;
       }
       
@@ -919,19 +929,22 @@
       // Validate date formats before proceeding
       const installDateInput = document.getElementById("installDate");
       if (installDateInput.value && !validateDateInput(installDateInput.value)) {
-        showModal("error", "Invalid Date Format", "Install Date must be in MM-DD-YYYY format.");
+        showModal("error", "Invalid Date Format", "Install Date must be in MM-DD-YYYY format (e.g., 12-25-2023).");
+        installDateInput.focus();
         return;
       }
 
       const removalDateInput = document.getElementById("removalDate");
       if (removalDateInput.value && !validateDateInput(removalDateInput.value)) {
-        showModal("error", "Invalid Date Format", "Removal Date must be in MM-DD-YYYY format.");
+        showModal("error", "Invalid Date Format", "Removal Date must be in MM-DD-YYYY format (e.g., 12-25-2023).");
+        removalDateInput.focus();
         return;
       }
 
       const originalTransactionDateInput = document.getElementById("originalTransactionDate");
       if (originalTransactionDateInput && originalTransactionDateInput.value && !validateDateInput(originalTransactionDateInput.value)) {
-        showModal("error", "Invalid Date Format", "Original Transaction Date must be in MM-DD-YYYY format.");
+        showModal("error", "Invalid Date Format", "Original Transaction Date must be in MM-DD-YYYY format (e.g., 12-25-2023).");
+        originalTransactionDateInput.focus();
         return;
       }
 
@@ -1042,6 +1055,9 @@
 
 
 
+
+
+    
 
 
   </body>
