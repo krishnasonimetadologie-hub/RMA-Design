@@ -413,10 +413,12 @@
             <input name="00NVA00000BAHHN" required />
           </div>
 
+          <!-- To this: -->
           <div class="field">
             <label>Original Transaction date</label>
-            <input name="00NVA00000BAGmj" type="date" />
+            <input name="00NVA00000BAGmj" type="text" pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD" />
           </div>
+
 
           <div class="field">
             <label>Original Inv #</label>
@@ -443,12 +445,15 @@
             <input name="00NVA0000095Lt5" required />
           </div>
 
+          <!-- To this: -->
           <div class="field">
             <label class="required">Install Date</label>
             <input
               id="installDate"
               name="00NVA00000AyTEH"
-              type="date"
+              type="text"
+              pattern="\d{4}-\d{2}-\d{2}"
+              placeholder="YYYY-MM-DD"
               required
             />
           </div>
@@ -460,11 +465,13 @@
             <input id="totalTime" name="00NVA00000AyWfB" readonly required />
           </div>
 
+          <!-- To this: -->
           <div class="field">
             <label>Removal Date</label>
-            <input id="removalDate" name="00NVA00000AyRAs" type="date" />
+            <input id="removalDate" name="00NVA00000AyRAs" type="text" pattern="\d{4}-\d{2}-\d{2}" placeholder="YYYY-MM-DD" />
           </div>
 
+          
           <div class="field">
             <label class="required"
               >Total cycle since install of part ( In Days )</label
@@ -636,9 +643,28 @@
     return await res.json();
   }
 
+  /* ================= DATE VALIDATION ================= */
+  function validateDateInput(dateString) {
+    // Check format YYYY-MM-DD
+    const pattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+    if (!pattern.test(dateString)) return false;
+    
+    // Check if it's a valid date
+    const date = new Date(dateString);
+    const year = parseInt(dateString.substring(0, 4), 10);
+    const month = parseInt(dateString.substring(5, 7), 10);
+    const day = parseInt(dateString.substring(8, 10), 10);
+    
+    // Check if the parsed date matches the input
+    return date.getFullYear() === year && 
+           (date.getMonth() + 1) === month && 
+           date.getDate() === day &&
+           !isNaN(date.getTime());
+  }
+
   /* ================= DATE CALCULATIONS ================= */
   function daysBetween(date) {
-    if (!date) return "";
+    if (!date || !validateDateInput(date)) return "";
     
     // Parse the input date
     const givenDate = new Date(date);
@@ -658,17 +684,68 @@
     return diffDays >= 0 ? diffDays.toString() : "";
   }
 
+  /* ================= DATE PICKER HELPERS ================= */
+  function showDatePicker(input) {
+    // Create a date picker dialog or use browser's date input temporarily
+    const tempInput = document.createElement('input');
+    tempInput.type = 'date';
+    tempInput.style.position = 'fixed';
+    tempInput.style.top = '-100px';
+    tempInput.style.left = '0';
+    document.body.appendChild(tempInput);
+    
+    tempInput.focus();
+    
+    tempInput.addEventListener('change', function() {
+      if (this.value) {
+        input.value = this.value; // Already in YYYY-MM-DD format
+        input.dispatchEvent(new Event('change'));
+      }
+      document.body.removeChild(tempInput);
+    });
+    
+    tempInput.addEventListener('blur', function() {
+      setTimeout(() => {
+        if (document.body.contains(tempInput)) {
+          document.body.removeChild(tempInput);
+        }
+      }, 100);
+    });
+  }
+
   function setupDateCalculations() {
+    const originalTransactionDateInput = document.getElementById("originalTransactionDate");
     const installDateInput = document.getElementById("installDate");
     const removalDateInput = document.getElementById("removalDate");
     const totalTimeField = document.getElementById("totalTime");
     const totalCycleField = document.getElementById("totalCycle");
+
+    // Original Transaction Date change handler
+    if (originalTransactionDateInput) {
+      originalTransactionDateInput.addEventListener('change', () => {
+        const dateValue = originalTransactionDateInput.value;
+        
+        if (dateValue && !validateDateInput(dateValue)) {
+          alert("Please enter Original Transaction Date in YYYY-MM-DD format.");
+          originalTransactionDateInput.value = "";
+          return;
+        }
+      });
+    }
 
     // Install Date change handler
     installDateInput.addEventListener('change', () => {
       const installDateValue = installDateInput.value;
       
       if (!installDateValue) {
+        totalTimeField.value = "";
+        return;
+      }
+      
+      // Validate date format
+      if (!validateDateInput(installDateValue)) {
+        alert("Please enter Install Date in YYYY-MM-DD format.");
+        installDateInput.value = "";
         totalTimeField.value = "";
         return;
       }
@@ -699,6 +776,14 @@
         return;
       }
       
+      // Validate date format
+      if (!validateDateInput(removalDateValue)) {
+        alert("Please enter Removal Date in YYYY-MM-DD format.");
+        removalDateInput.value = "";
+        totalCycleField.value = "";
+        return;
+      }
+      
       const removalDateTime = new Date(removalDateValue);
       const today = new Date();
       
@@ -721,27 +806,6 @@
       // Calculate and set days
       const days = daysBetween(removalDateValue);
       totalCycleField.value = days;
-    });
-  }
-
-  /* ================= SIMPLE DATE CONVERSION ================= */
-  function convertDatesToText() {
-    // Get all date inputs
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    
-    dateInputs.forEach(input => {
-      if (input.value) {
-        // Store the original value (already in YYYY-MM-DD format from date input)
-        const originalValue = input.value;
-        
-        // Change type to text
-        input.type = 'text';
-        
-        // Set the value as text (it's already in YYYY-MM-DD format)
-        input.value = originalValue;
-        
-        console.log(`Converted ${input.name} to text: ${originalValue}`);
-      }
     });
   }
 
@@ -770,6 +834,25 @@
         return;
       }
 
+      // Validate date formats before proceeding
+      const installDateInput = document.getElementById("installDate");
+      if (installDateInput.value && !validateDateInput(installDateInput.value)) {
+        showModal("error", "Invalid Date Format", "Install Date must be in YYYY-MM-DD format.");
+        return;
+      }
+
+      const removalDateInput = document.getElementById("removalDate");
+      if (removalDateInput.value && !validateDateInput(removalDateInput.value)) {
+        showModal("error", "Invalid Date Format", "Removal Date must be in YYYY-MM-DD format.");
+        return;
+      }
+
+      const originalTransactionDateInput = document.getElementById("originalTransactionDate");
+      if (originalTransactionDateInput && originalTransactionDateInput.value && !validateDateInput(originalTransactionDateInput.value)) {
+        showModal("error", "Invalid Date Format", "Original Transaction Date must be in YYYY-MM-DD format.");
+        return;
+      }
+
       submitBtn.disabled = true;
       showLoading("Authenticating...", 10);
 
@@ -791,19 +874,12 @@
         }
 
         updateLoading("Sales Order Verified", 80);
-        
-        // Convert all date inputs to text before submission
-        updateLoading("Preparing data...", 85);
-        convertDatesToText();
-        
         updateLoading("Submitting Request...", 95);
 
-        /* ✅ PROCEED WITH STANDARD WEB-TO-CASE */
-        // Use traditional form submission
-        await submitWebToCase(form);
+        // Submit the form directly - dates are already text inputs
+        await submitToSalesforce(this);
         updateLoading("Submission Complete", 100);
         
-        // Small delay to show 100%
         setTimeout(() => {
           hideLoading();
           showModal(
@@ -828,19 +904,33 @@
     });
   }
 
-  async function submitWebToCase(form) {
-    // Create form data
+  async function submitToSalesforce(form) {
+    // Create URLSearchParams to build the form data
+    const params = new URLSearchParams();
+    
+    // Add all hidden fields first
+    params.append('orgid', '00DVA000007Hanq');
+    params.append('retURL', 'https://crsjetspares.com');
+    params.append('type', 'Sales');
+    params.append('recordType', 'Sales');
+    params.append('00NVA0000095wfh', 'RMA');
+    
+    // Add all visible form fields
     const formData = new FormData(form);
     
-    // Convert to URL encoded string for better compatibility
-    const params = new URLSearchParams();
-    for (let [key, value] of formData.entries()) {
-      params.append(key, value);
+    for (let [name, value] of formData.entries()) {
+      // Skip hidden fields we already added
+      if (['orgid', 'retURL', 'type', 'recordType', '00NVA0000095wfh'].includes(name)) {
+        continue;
+      }
+      
+      // All fields including dates are already text, so just append them
+      params.append(name, value);
     }
     
-    console.log("Submitting with data:", params.toString());
+    console.log("Submitting to Salesforce:", params.toString());
     
-    // Submit to Salesforce
+    // Submit to Salesforce Web-to-Case
     await fetch(
       "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8",
       {
@@ -848,7 +938,7 @@
         body: params,
         mode: "no-cors",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
         }
       }
     );
