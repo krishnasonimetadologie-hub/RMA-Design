@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RMA Web Form</title>
+
+    <style>
+      /* ===== PAGE BACKGROUND ===== */
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #0a2a43;
+        font-size: clamp(11px, 2.5vw, 13px);
+        position: relative;
+        z-index: 0;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("https://i.ibb.co/hJfMMh17/image-2.png");
+        opacity: 0.25;
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-size: 100% 100%;
+        z-index: -1;
+      }
+
+      /* ===== HEADER ===== */
+      .header {
+        text-align: center;
+        padding: 40px 20px 20px;
+      }
+
+      .header img {
+        max-width: 220px;
+      }
+
+      .header h2 {
+        margin: 16px 0 6px;
+        color: #1f3c6d;
+        font-size: 22px;
+      }
+
+      .header p {
+        margin: 0;
+        font-size: 14px;
+        font-style: italic;
+        color: #444;
+      }
+
+      /* ===== CARD ===== */
+      .container {
+        max-width: 760px;
+        margin: 20px auto 50px;
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 34px 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .title {
+        text-align: center;
+        font-size: 26px;
+        color: #355c9a;
+        font-weight: 650;
+        margin-bottom: 30px;
+      }
+
+      /* ===== FORM GRID ===== */
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 36px;
+        row-gap: 20px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .field label {
+        font-size: 13.5px;
+        color: #333;
+        margin-bottom: 6px;
+      }
+
+      .required::after {
+        content: " *";
+        color: #d93025;
+      }
+
+      /* ===== INPUTS ===== */
+      .field input,
+      .field select,
+      .field textarea {
+        height: 35px;
+        padding: 0px 10px;
+        font-size: 14px;
+        border-radius: 4px;
+        border: none;
+        background: #f2f5f9;
+      }
+
+      .field textarea {
+        padding: 8px 10px;
+      }
+
+      textarea {
+        height: 50px !important;
+        resize: none;
+        overflow-y: auto;
+      }
+
+      input[readonly] {
+        background: #e7ebf2;
+        cursor: not-allowed;
+      }
+
+      .full {
+        grid-column: span 2;
+      }
+
+      /* ===== DISCLAIMER ===== */
+      .disclaimer {
+        margin-top: 28px;
+        font-size: 12.8px;
+        color: #222;
+        line-height: 1.55;
+      }
+
+      .disclaimer strong {
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .disclaimer a {
+        color: #1f3c6d;
+        text-decoration: underline;
+      }
+
+      /* ===== SUBMIT ===== */
+      .submit-wrap {
+        text-align: center;
+        margin-top: 28px;
+      }
+
+      .submit-wrap button {
+        background: #355c9a;
+        color: #fff;
+        border: none;
+        padding: 10px 42px;
+        font-size: 15px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .submit-wrap button:hover {
+        background: #2a4c85;
+      }
+
+      /* ===== MOBILE ===== */
+      @media (max-width: 768px) {
+        .container {
+          padding: 26px 22px;
+        }
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+        .full {
+          grid-column: span 1;
+        }
+      }
+
+      /* Modal Styles */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 42, 67, 0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-overlay.show {
+        display: flex;
+      }
+
+      .modal-content {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 28px 32px;
+        max-width: 420px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        animation: modalSlideIn 0.3s ease-out;
+      }
+
+      @keyframes modalSlideIn {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .modal-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+
+      .modal-icon.success {
+        color: #28a745;
+      }
+
+      .modal-icon.error {
+        color: #dc3545;
+      }
+
+      .modal-title {
+        font-size: clamp(18px, 4vw, 22px);
+        font-weight: 600;
+        color: #0a2a43;
+        margin-bottom: 12px;
+      }
+
+      .modal-message {
+        font-size: clamp(13px, 3vw, 15px);
+        color: #333;
+        line-height: 1.5;
+        margin-bottom: 24px;
+      }
+
+      .modal-btn {
+        background: #2f5fa7;
+        color: #ffffff;
+        padding: 10px 32px;
+        border-radius: 6px;
+        border: none;
+        font-size: clamp(13px, 3vw, 15px);
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .modal-btn:hover {
+        background: #264a85;
+      }
+
+      .help-text {
+        font-size: clamp(10px, 2.4vw, 11.5px);
+        color: #666;
+        font-style: italic;
+        margin-top: 4px;
+      }
+
+      /* Loading Modal Styles */
+      .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 42, 67, 0.85);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loading-overlay.show {
+        display: flex;
+      }
+
+      .loading-content {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 32px 36px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        text-align: center;
+      }
+
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 20px;
+        border: 4px solid #e3f2fd;
+        border-top: 4px solid #2f5fa7;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-text {
+        font-size: clamp(14px, 3.2vw, 16px);
+        font-weight: 600;
+        color: #0a2a43;
+        margin-bottom: 20px;
+      }
+
+      .progress-container {
+        width: 100%;
+        height: 8px;
+        background: #e3f2fd;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #2f5fa7, #4a7bc8);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 10px rgba(47, 95, 167, 0.5);
+      }
+
+      .progress-label {
+        font-size: clamp(11px, 2.6vw, 13px);
+        color: #666;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <div class="header">
+      <img src="https://i.ibb.co/vvwrFWQ9/image.png" alt="CRS Jet Spares" />
+      <h2>Parts. Problems. Solved</h2>
+      <p>We offer More than just Parts. We offer Solutions.</p>
+    </div>
+
+    <!-- FORM CARD -->
+    <div class="container">
+      <div class="title">RMA Web Form</div>
+
+      <form
+        id="rmaForm"
+        action="https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com/servlet/servlet.WebToCase?encoding=UTF-8&orgId=00DVA000007Hanq"
+        method="POST"
+        novalidate
+      >
+        <input type="hidden" name="orgid" value="00DVA000007Hanq" />
+        <input type="hidden" name="retURL" value="https://crsjetspares.com" />
+        <input type="hidden" name="type" value="Sales" />
+        <input type="hidden" name="recordType" value="Sales" />
+        <input type="hidden" name="00NVA0000095wfh" value="RMA" />
+
+        <div class="form-grid">
+          <div class="field">
+            <label class="required">Company Name</label>
+            <input name="company" required />
+          </div>
+
+          <div class="field">
+            <label class="required">Name</label>
+            <input name="name" for="name" required />
+          </div>
+
+          <div class="field">
+            <label class="required">RMA request type</label>
+            <select name="00NVA0000095x8j" required>
+              <option>Warranty Replacement</option>
+              <option>Warranty C.P.O</option>
+              <option>Return for Credit</option>
+              <option>Warranty Return for Credit</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="required">Email</label>
+            <input name="email" type="email" required />
+          </div>
+
+          <div class="field">
+            <label>Customer #</label>
+            <input name="00NVA00000AeR8b" />
+          </div>
+
+          <div class="field">
+            <label class="required">Phone</label>
+            <input name="phone" required pattern="^[0-9+()\-.\s]{7,20}$" />
+          </div>
+
+          <div class="field">
+            <label class="required">SO #</label>
+            <input id="soField" name="subject" required />
+          </div>
+
+          <div class="field">
+            <label class="required">Customer PO #</label>
+            <input name="00NVA00000BAHHN" required />
+          </div>
+
+          <div class="field">
+            <label>Original Transaction date</label>
+            <input name="00NVA00000BAGmj" type="date" />
+          </div>
+
+          <div class="field">
+            <label>Original Inv #</label>
+            <input name="00NVA00000BAGy1" />
+          </div>
+
+          <div class="field">
+            <label class="required">PN</label>
+            <input name="00NVA0000095LtD" required />
+          </div>
+
+          <div class="field">
+            <label class="required">Aircraft Type</label>
+            <input required />
+          </div>
+
+          <div class="field">
+            <label class="required">SN</label>
+            <input name="00NVA0000095LtI" required />
+          </div>
+
+          <div class="field">
+            <label class="required">Aircraft Serial #</label>
+            <input name="00NVA0000095Lt5" required />
+          </div>
+
+          <div class="field">
+            <label class="required">Install Date</label>
+            <input
+              id="installDate"
+              name="00NVA00000AyTEH"
+              type="date"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label class="required"
+              >Total time since install of part ( In Days )</label
+            >
+            <input id="totalTime" name="00NVA00000AyWfB" readonly required />
+          </div>
+
+          <div class="field">
+            <label>Removal Date</label>
+            <input id="removalDate" name="00NVA00000AyRAs" type="date" />
+          </div>
+
+          <div class="field">
+            <label class="required"
+              >Total cycle since install of part ( In Days )</label
+            >
+            <input id="totalCycle" name="00NVA00000AyWk1" readonly required />
+          </div>
+
+          <div class="field full">
+            <label class="required">Discrepancy</label>
+            <textarea name="00NVA00000AyTPZ" required minlength="10"></textarea>
+          </div>
+
+          <div class="field full">
+            <label class="required">Reason For Return</label>
+            <textarea name="00NVA00000AyTW1" required minlength="10"></textarea>
+          </div>
+        </div>
+
+        <div class="disclaimer">
+          <strong>Disclaimer :</strong>
+
+          <ol class="disclaimer-list">
+            <li>
+              CRS Jet Spares will not accept and units returned without a RMA
+              Authorization Number.
+            </li>
+            <li>
+              All units must be returned within 7 days and accompanied with the
+              original paperwork. Failure to do so may result in warranty
+              denial.
+            </li>
+            <li>
+              In the event of a no fault found or that failure is a result of
+              improper use, customer will be responsible for any charges
+              incurred. CRS is not liable for any consequential expenses related
+              to the warranty claim.
+            </li>
+            <li>
+              A minimum 20% restocking fee applies on all returns. Any returns
+              where packing has been opened recertification charged will also
+              apply.
+            </li>
+          </ol>
+
+          <p class="disclaimer-affirmation">
+            I hereby affirm all information regarding the above mentioned
+            components including total time, if any and cycles to be true and
+            correct. By submitting the information in the RMA Request form, you
+            are agreeing to the listed on the
+            <a
+              href="https://crsjetspares.com/general-terms-and-conditions-for-sale-and-exchange-of-goods/"
+              target="_blank"
+            >
+              Terms and Conditions
+            </a>
+            CRS Jet Spares invoice and website.
+          </p>
+        </div>
+
+        <div class="submit-wrap submit-btn">
+          <button type="submit">Submit</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div id="loadingText" class="loading-text">Processing...</div>
+        <div class="progress-container">
+          <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <div id="progressLabel" class="progress-label">0%</div>
+      </div>
+    </div>
+
+    <!-- Modal Popup -->
+    <div id="modal" class="modal-overlay">
+      <div class="modal-content">
+        <div id="modalIcon" class="modal-icon"></div>
+        <div id="modalTitle" class="modal-title"></div>
+        <div id="modalMessage" class="modal-message"></div>
+        <button class="modal-btn" onclick="closeModal()">OK</button>
+      </div>
+    </div>
+
+    <script>
+  /* ================= SALESFORCE CONFIG ================= */
+  const CLIENT_ID =
+    "3MVG9O_Hkc8TP1aFEeEWU9ZyX2f05bkHPl2XawuPFSJwal8ZF1mDPue9o0kPDBVcOU64PRCCEZnQq2aIJmKv5";
+  const CLIENT_SECRET =
+    "4DA156C1380C7AA53FCE2C408620F764D3D46C7C4453D58077B173206EA351C5";
+  const SF_INSTANCE =
+    "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com";
+  const OAUTH_URL = SF_INSTANCE + "/services/oauth2/token";
+  const API_ENDPOINT = SF_INSTANCE + "/services/apexrest/caseManagement/";
+
+  /* ================= MODALS ================= */
+  function showModal(type, title, message) {
+    const modal = document.getElementById("modal");
+    const icon = document.getElementById("modalIcon");
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalMessage").innerText = message;
+
+    icon.innerText = type === "success" ? "✓" : "✕";
+    icon.className = "modal-icon " + type;
+
+    modal.classList.add("show");
+  }
+
+  function closeModal() {
+    document.getElementById("modal").classList.remove("show");
+  }
+
+  function showLoading(text, percent) {
+    document.getElementById("loadingText").innerText = text;
+    document.getElementById("progressBar").style.width = percent + "%";
+    document.getElementById("progressLabel").innerText = percent + "%";
+    document.getElementById("loadingModal").classList.add("show");
+  }
+
+  function updateLoading(text, percent) {
+    document.getElementById("loadingText").innerText = text;
+    document.getElementById("progressBar").style.width = percent + "%";
+    document.getElementById("progressLabel").innerText = percent + "%";
+  }
+
+  function hideLoading() {
+    document.getElementById("loadingModal").classList.remove("show");
+  }
+
+  /* ================= HELPERS ================= */
+  function extractSO(value) {
+    const match = value.match(/SO-\d+/i);
+    return match ? match[0].toUpperCase() : null;
+  }
+
+  async function getAccessToken() {
+    const params = new URLSearchParams();
+    params.append("grant_type", "client_credentials");
+    params.append("client_id", CLIENT_ID);
+    params.append("client_secret", CLIENT_SECRET);
+
+    const res = await fetch(OAUTH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params
+    });
+
+    if (!res.ok) throw new Error("Auth failed");
+    return (await res.json()).access_token;
+  }
+
+  async function verifySalesOrder(so, token) {
+    const res = await fetch(
+      API_ENDPOINT + "?salesOrderNumber=" + encodeURIComponent(so),
+      {
+        headers: { Authorization: "Bearer " + token }
+      }
+    );
+
+    if (!res.ok) throw new Error("SO check failed");
+    return await res.json();
+  }
+
+  /* ================= FORM SUBMIT OVERRIDE ================= */
+  document
+    .getElementById("rmaForm")
+    .addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const soInput = document.getElementById("soField");
+      const submitBtn = this.querySelector("button[type='submit']");
+
+      if (!soInput.value.trim()) {
+        showModal("error", "Missing Field", "Sales Order Number is required.");
+        return;
+      }
+
+      const so = extractSO(soInput.value);
+      if (!so) {
+        showModal(
+          "error",
+          "Invalid Format",
+          "Sales Order must be in format SO-XXXXX"
+        );
+        return;
+      }
+
+      submitBtn.disabled = true;
+      showLoading("Authenticating...", 10);
+
+      try {
+        const token = await getAccessToken();
+        updateLoading("Verifying Sales Order...", 40);
+
+        const result = await verifySalesOrder(so, token);
+
+        if (!result.salesOrderExists) {
+          hideLoading();
+          showModal(
+            "error",
+            "Sales Order Not Found",
+            "The provided Sales Order does not exist."
+          );
+          submitBtn.disabled = false;
+          return;
+        }
+
+        updateLoading("Sales Order Verified", 80);
+        updateLoading("Submitting Request...", 95);
+
+        /* ✅ PROCEED WITH STANDARD WEB-TO-CASE */
+        hideLoading();
+        this.submit();
+
+      } catch (err) {
+        console.error(err);
+        hideLoading();
+        showModal(
+          "error",
+          "Submission Failed",
+          "Unable to verify Sales Order. Please try again."
+        );
+        submitBtn.disabled = false;
+      }
+    });
+
+  /* ================= DATE CALCULATIONS ================= */
+  function daysBetween(date) {
+    if (!date) return "";
+    const diff = new Date() - new Date(date);
+    return diff >= 0 ? Math.floor(diff / 86400000) : "";
+  }
+
+  installDate.onchange = () => {
+    if (new Date(installDate.value) > new Date()) {
+      alert("Install Date cannot be in the future.");
+      installDate.value = "";
+      totalTime.value = "";
+      return;
+    }
+    totalTime.value = daysBetween(installDate.value);
+  };
+
+  removalDate.onchange = () => {
+    if (
+      installDate.value &&
+      new Date(removalDate.value) < new Date(installDate.value)
+    ) {
+      alert("Removal Date cannot be before Install Date.");
+      removalDate.value = "";
+      totalCycle.value = "";
+      return;
+    }
+    totalCycle.value = daysBetween(removalDate.value);
+  };
+</script>
+
+  </body>
+</html>
