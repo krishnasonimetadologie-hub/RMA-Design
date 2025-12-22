@@ -114,6 +114,21 @@
         font-family: Arial, Helvetica, sans-serif;
       }
 
+      /* Date input specific styling */
+      .field input[type="date"] {
+        padding: 0px 8px;
+      }
+
+      /* Placeholder styling for date inputs */
+      .field input[type="date"]:not(:valid):not(:focus) {
+        color: #999;
+      }
+
+      .field input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.7;
+      }
+
       .field textarea {
         padding: 8px 10px;
         height: 70px !important;
@@ -383,19 +398,19 @@
         <!-- COMPANY -->
         <div class="field">
           <label class="required">Company Name</label>
-          <input name="companyName"/>
+          <input name="companyName" required />
         </div>
 
         <!-- CONTACT NAME -->
         <div class="field">
           <label class="required">Name</label>
-          <input name="contactName"/>
+          <input name="contactName" required />
         </div>
 
         <!-- RMA REQUEST TYPE -->
         <div class="field">
           <label class="required">RMA Request Type</label>
-          <select name="rmaRequestType">
+          <select name="rmaRequestType" required>
             <option value="">Select Type</option>
             <option value="Warranty Replacement">Warranty Replacement</option>
             <option value="Warranty C.P.O">Warranty C.P.O</option>
@@ -407,7 +422,7 @@
         <!-- EMAIL -->
         <div class="field">
           <label class="required">Email</label>
-          <input name="email" type="email"/>
+          <input name="email" type="email" required />
         </div>
 
         <!-- CUSTOMER NUMBER -->
@@ -419,25 +434,25 @@
         <!-- PHONE -->
         <div class="field">
           <label class="required">Phone</label>
-          <input name="phone"/>
+          <input name="phone" required />
         </div>
 
         <!-- SALES ORDER -->
         <div class="field">
           <label class="required">SO #</label>
-          <input name="salesOrderNumber"/>
+          <input name="salesOrderNumber" required />
         </div>
 
         <!-- CUSTOMER PO -->
         <div class="field">
           <label class="required">Customer PO #</label>
-          <input name="customerPoNumber"/>
+          <input name="customerPoNumber" required />
         </div>
 
         <!-- ORIGINAL TRANSACTION DATE -->
         <div class="field">
           <label>Original Transaction Date</label>
-          <input name="originalTransactionDate" id="originalTransactionDate" placeholder="MM/DD/YYYY" />
+          <input name="originalTransactionDate" id="originalTransactionDate" type="date" />
         </div>
 
         <!-- ORIGINAL INVOICE -->
@@ -449,61 +464,61 @@
         <!-- PART NUMBER -->
         <div class="field">
           <label class="required">Part Number (PN)</label>
-          <input name="partNumber" />
+          <input name="partNumber" required />
         </div>
 
         <!-- AIRCRAFT TYPE -->
         <div class="field">
           <label class="required">Aircraft Type</label>
-          <input name="aircraftType" />
+          <input name="aircraftType" required />
         </div>
 
         <!-- SERIAL NUMBER -->
         <div class="field">
           <label class="required">Serial Number (SN)</label>
-          <input name="serialNumber" />
+          <input name="serialNumber" required />
         </div>
 
         <!-- AIRCRAFT SERIAL -->
         <div class="field">
           <label class="required">Aircraft Serial #</label>
-          <input name="aircraftSerialNumber" />
+          <input name="aircraftSerialNumber" required />
         </div>
 
         <!-- INSTALL DATE -->
         <div class="field">
           <label class="required">Install Date</label>
-          <input name="installDate" id="installDate" placeholder="MM/DD/YYYY" />
+          <input name="installDate" id="installDate" type="date" required />
         </div>
 
         <!-- TOTAL TIME -->
         <div class="field">
           <label class="required">Total Time Since Install (Days)</label>
-          <input name="totalTimeSinceInstall" id="totalTimeSinceInstall" readonly  />
+          <input name="totalTimeSinceInstall" id="totalTimeSinceInstall" readonly />
         </div>
 
         <!-- REMOVAL DATE -->
         <div class="field">
           <label>Removal Date</label>
-          <input name="removalDate" id="removalDate" placeholder="MM/DD/YYYY" />
+          <input name="removalDate" id="removalDate" type="date" />
         </div>
 
         <!-- TOTAL CYCLES -->
         <div class="field">
           <label class="required">Total Cycles Since Install</label>
-          <input name="totalCyclesSinceInstall" id="totalCyclesSinceInstall" readonly  />
+          <input name="totalCyclesSinceInstall" id="totalCyclesSinceInstall" readonly />
         </div>
 
         <!-- DISCREPANCY -->
         <div class="field full">
           <label class="required">Discrepancy</label>
-          <textarea name="discrepancy"></textarea>
+          <textarea name="discrepancy" required></textarea>
         </div>
 
         <!-- REASON FOR RETURN -->
         <div class="field full">
           <label class="required">Reason For Return</label>
-          <textarea name="reasonForReturn"></textarea>
+          <textarea name="reasonForReturn" required></textarea>
         </div>
 
         <!-- FILE ATTACHMENTS -->
@@ -626,64 +641,139 @@
         return match ? match[0].toUpperCase() : null;
       }
 
-      function validateDateInput(dateString) {
-        if (!dateString) return true;
-
-        const pattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-        if (!pattern.test(dateString)) return false;
-
-        const parts = dateString.split("/");
-        const month = parseInt(parts[0], 10);
-        const day = parseInt(parts[1], 10);
-        const year = parseInt(parts[2], 10);
-
-        if (month < 1 || month > 12) return false;
-        if (day < 1 || day > 31) return false;
-
-        const date = new Date(year, month - 1, day);
-        return (
-          date.getFullYear() === year &&
-          date.getMonth() + 1 === month &&
-          date.getDate() === day &&
-          !isNaN(date.getTime())
-        );
-      }
-
-      function formatDateToMMDDYYYY(dateString) {
-        if (!dateString) return "";
+      // Convert HTML5 date input (YYYY-MM-DD) to Salesforce format (YYYY-MM-DD)
+      function formatDateForSalesforce(dateString) {
+        if (!dateString) return null;
         
-        if (validateDateInput(dateString)) {
+        // HTML5 date input already returns YYYY-MM-DD
+        // Validate format
+        const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+        if (datePattern.test(dateString)) {
           return dateString;
         }
-
+        
+        // If somehow not in correct format, try to parse
         const date = new Date(dateString);
-        if (isNaN(date.getTime())) return dateString;
-
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
+        if (isNaN(date.getTime())) {
+          console.warn('Invalid date:', dateString);
+          return null;
+        }
+        
         const year = date.getFullYear();
-
-        return `${month}/${day}/${year}`;
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
       }
 
-      function daysBetween(dateString) {
-        if (!dateString || !validateDateInput(dateString)) return "";
-
-        const parts = dateString.split("/");
-        const month = parseInt(parts[0], 10) - 1;
-        const day = parseInt(parts[1], 10);
-        const year = parseInt(parts[2], 10);
-
-        const givenDate = new Date(year, month, day);
+      // Calculate days between date and today
+      function calculateDaysFromToday(dateString) {
+        if (!dateString) return "0";
+        
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "0";
+        
         const today = new Date();
-
-        givenDate.setHours(0, 0, 0, 0);
+        
+        // Reset time components for accurate day calculation
+        date.setHours(0, 0, 0, 0);
         today.setHours(0, 0, 0, 0);
-
-        const diffTime = today.getTime() - givenDate.getTime();
+        
+        const diffTime = today.getTime() - date.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Ensure non-negative value
+        return diffDays >= 0 ? diffDays.toString() : "0";
+      }
 
-        return diffDays >= 0 ? diffDays.toString() : "";
+      // ================= DATE CALCULATION SETUP =================
+      function setupDateCalculations() {
+        const installDateInput = document.getElementById("installDate");
+        const removalDateInput = document.getElementById("removalDate");
+        const totalTimeInput = document.getElementById("totalTimeSinceInstall");
+        const totalCyclesInput = document.getElementById("totalCyclesSinceInstall");
+
+        // Calculate days when install date changes
+        installDateInput.addEventListener("change", function() {
+          if (this.value) {
+            const days = calculateDaysFromToday(this.value);
+            totalTimeInput.value = days;
+            
+            
+            // Validate install date is not in the future
+            const installDate = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (installDate > today) {
+              showModal("error", "Invalid Date", "Install Date cannot be in the future.");
+              this.value = "";
+              totalTimeInput.value = "";
+              this.focus();
+            }
+          } else {
+            totalTimeInput.value = "";
+            if (!removalDateInput.value) {
+              totalCyclesInput.value = "";
+            }
+          }
+        });
+
+        // Calculate days when removal date changes
+        removalDateInput.addEventListener("change", function() {
+          if (this.value) {
+            const days = calculateDaysFromToday(this.value);
+            totalCyclesInput.value = days;
+            
+            // Validate removal date is not in the future
+            const removalDate = new Date(this.value);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (removalDate > today) {
+              showModal("error", "Invalid Date", "Removal Date cannot be in the future.");
+              this.value = "";
+              totalCyclesInput.value = "";
+              this.focus();
+            }
+            
+            // Validate removal date is not before install date
+            if (installDateInput.value) {
+              const installDate = new Date(installDateInput.value);
+              if (removalDate < installDate) {
+                showModal("error", "Invalid Date", "Removal Date cannot be before Install Date.");
+                this.value = "";
+                totalCyclesInput.value = "";
+                this.focus();
+              }
+            }
+          } else {
+            totalCyclesInput.value = "";
+            // If removal date is cleared, use install date for cycles
+            if (installDateInput.value) {
+              totalCyclesInput.value = calculateDaysFromToday(installDateInput.value);
+            }
+          }
+        });
+
+        // Set max date to today for all date inputs
+        function setMaxDateToToday() {
+          const today = new Date().toISOString().split('T')[0];
+          
+          const dateInputs = [
+            document.getElementById("installDate"),
+            document.getElementById("removalDate"),
+            document.getElementById("originalTransactionDate")
+          ];
+          
+          dateInputs.forEach(input => {
+            if (input) {
+              input.max = today;
+            }
+          });
+        }
+        
+        setMaxDateToToday();
       }
 
       // ================= SALESFORCE API FUNCTIONS =================
@@ -750,30 +840,50 @@
       }
 
       async function createCase(formData, accessToken) {
+        // Prepare data for Salesforce
         const caseData = {
-          Subject: "RMA Request - " + formData.salesOrderNumber,
+          // Required fields
+          Subject: `RMA Request - ${formData.salesOrderNumber}`,
           SuppliedCompany: formData.companyName,
-          Type: "Sales",
-          RecordTypeId: formData.recordTypeId,
           SuppliedName: formData.contactName,
           SuppliedEmail: formData.email,
           SuppliedPhone: formData.phone,
-          Customer_Name__c: formData.customerNumber,
+          Status: 'New',
+          Type: 'Sales',
+          Origin: 'Web',
+          RecordTypeId: formData.recordTypeId,
+          
+          // Custom fields with proper date formatting
+          Customer_Name__c: formData.customerNumber || null,
           Customer_PO__c: formData.customerPoNumber,
           Category__c: formData.rmaRequestType,
           Part_Number__c: formData.partNumber,
           Serial_Number__c: formData.serialNumber,
           Aircraft_Type__c: formData.aircraftType,
           Aircraft_Serial__c: formData.aircraftSerialNumber,
-          Original_Transaction_Date__c: formData.originalTransactionDate || null,
+          
+          // Date fields formatted for Salesforce
+          Original_Transaction_Date__c: formatDateForSalesforce(formData.originalTransactionDate),
           Original_Invoice__c: formData.originalInvoiceNumber || null,
-          Install_Date__c: null,
-          Removal_Date__c:  null,
+          Install_Date__c: formatDateForSalesforce(formData.installDate),
+          Removal_Date__c: formatDateForSalesforce(formData.removalDate),
+          
+          // Calculated fields
           Total_time_since_install_of_part__c: formData.totalTimeSinceInstall || "0",
           Total_cycle_since_install_of_part__c: formData.totalCyclesSinceInstall || "0",
           Discrepancy__c: formData.discrepancy,
+          Reason_For_Return__c: formData.reasonForReturn,
           Sub_Type__c: "RMA"
         };
+
+        // Remove null values to avoid sending empty fields
+        Object.keys(caseData).forEach(key => {
+          if (caseData[key] === null || caseData[key] === undefined) {
+            delete caseData[key];
+          }
+        });
+
+        console.log('Creating Case with data:', JSON.stringify(caseData, null, 2));
 
         const response = await fetch(SF_INSTANCE + '/services/data/v62.0/sobjects/Case', {
           method: 'POST',
@@ -785,9 +895,9 @@
         });
 
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Case creation error:', errorData);
-          throw new Error('Failed to create case');
+          const errorText = await response.text();
+          console.error('Case creation error response:', errorText);
+          throw new Error('Failed to create case: ' + response.status);
         }
 
         const result = await response.json();
@@ -839,79 +949,6 @@
         });
       }
 
-      // ================= DATE CALCULATION SETUP =================
-      function setupDateCalculations() {
-        const installDateInput = document.getElementById("installDate");
-        const removalDateInput = document.getElementById("removalDate");
-        const originalTransactionDateInput = document.getElementById("originalTransactionDate");
-        const totalTimeInput = document.getElementById("totalTimeSinceInstall");
-        const totalCyclesInput = document.getElementById("totalCyclesSinceInstall");
-
-        // Install Date handler
-        installDateInput.addEventListener("blur", function() {
-          const value = this.value.trim();
-          
-          if (!value) {
-            totalTimeInput.value = "";
-            return;
-          }
-
-          if (!validateDateInput(value)) {
-            showModal("error", "Invalid Date", "Install Date must be in MM/DD/YYYY format");
-            this.value = "";
-            totalTimeInput.value = "";
-            this.focus();
-            return;
-          }
-
-          const formattedDate = formatDateToMMDDYYYY(value);
-          this.value = formattedDate;
-
-          const days = daysBetween(formattedDate);
-          totalTimeInput.value = days || "0";
-        });
-
-        // Removal Date handler
-        removalDateInput.addEventListener("blur", function() {
-          const value = this.value.trim();
-          
-          if (!value) {
-            totalCyclesInput.value = "";
-            return;
-          }
-
-          if (!validateDateInput(value)) {
-            showModal("error", "Invalid Date", "Removal Date must be in MM/DD/YYYY format");
-            this.value = "";
-            totalCyclesInput.value = "";
-            this.focus();
-            return;
-          }
-
-          const formattedDate = formatDateToMMDDYYYY(value);
-          this.value = formattedDate;
-
-          const days = daysBetween(formattedDate);
-          totalCyclesInput.value = days || "0";
-        });
-
-        // Original Transaction Date handler
-        originalTransactionDateInput.addEventListener("blur", function() {
-          const value = this.value.trim();
-          
-          if (!value) return;
-
-          if (!validateDateInput(value)) {
-            showModal("error", "Invalid Date", "Original Transaction Date must be in MM/DD/YYYY format");
-            this.value = "";
-            this.focus();
-            return;
-          }
-
-          this.value = formatDateToMMDDYYYY(value);
-        });
-      }
-
       // ================= FORM SUBMISSION =================
       async function handleFormSubmit(event) {
         event.preventDefault();
@@ -960,6 +997,32 @@
           return;
         }
 
+        // Validate dates are not in the future
+        const installDateInput = document.getElementById("installDate");
+        const today = new Date().toISOString().split('T')[0];
+        
+        if (installDateInput.value && installDateInput.value > today) {
+          showModal("error", "Invalid Date", "Install Date cannot be in the future.");
+          installDateInput.focus();
+          return;
+        }
+
+        const removalDateInput = document.getElementById("removalDate");
+        if (removalDateInput.value && removalDateInput.value > today) {
+          showModal("error", "Invalid Date", "Removal Date cannot be in the future.");
+          removalDateInput.focus();
+          return;
+        }
+
+        // Validate removal date is not before install date
+        if (installDateInput.value && removalDateInput.value) {
+          if (removalDateInput.value < installDateInput.value) {
+            showModal("error", "Invalid Date", "Removal Date cannot be before Install Date.");
+            removalDateInput.focus();
+            return;
+          }
+        }
+
         // Disable submit button and show loading
         submitBtn.disabled = true;
         showLoading("Authenticating...", 0);
@@ -994,20 +1057,22 @@
             phone: form.querySelector('[name="phone"]').value.trim(),
             salesOrderNumber: salesOrderNumber,
             customerPoNumber: form.querySelector('[name="customerPoNumber"]').value.trim(),
-            originalTransactionDate: form.querySelector('[name="originalTransactionDate"]').value.trim(),
+            originalTransactionDate: form.querySelector('[name="originalTransactionDate"]').value,
             originalInvoiceNumber: form.querySelector('[name="originalInvoiceNumber"]').value.trim(),
             partNumber: form.querySelector('[name="partNumber"]').value.trim(),
             aircraftType: form.querySelector('[name="aircraftType"]').value.trim(),
             serialNumber: form.querySelector('[name="serialNumber"]').value.trim(),
             aircraftSerialNumber: form.querySelector('[name="aircraftSerialNumber"]').value.trim(),
-            installDate: form.querySelector('[name="installDate"]').value.trim(),
+            installDate: form.querySelector('[name="installDate"]').value,
             totalTimeSinceInstall: form.querySelector('[name="totalTimeSinceInstall"]').value.trim() || "0",
-            removalDate: form.querySelector('[name="removalDate"]').value.trim(),
+            removalDate: form.querySelector('[name="removalDate"]').value,
             totalCyclesSinceInstall: form.querySelector('[name="totalCyclesSinceInstall"]').value.trim() || "0",
             discrepancy: form.querySelector('[name="discrepancy"]').value.trim(),
             reasonForReturn: form.querySelector('[name="reasonForReturn"]').value.trim(),
             recordTypeId: recordTypeId
           };
+
+          console.log('Form data prepared for submission:', formData);
 
           // Step 5: Create Case
           updateLoading("Creating RMA case...", 70);
@@ -1036,9 +1101,10 @@
             hideLoading();
             showModal('success', 'Thank You!', 'Your RMA form has been submitted successfully.', function() {
               // Reset form
-              //form.reset();
-              // Optional: Redirect to confirmation page
-              window.location.href = "https://crsjetspares.com/thank-you";
+              form.reset();
+              // Reset calculated fields
+              document.getElementById('totalTimeSinceInstall').value = '';
+              document.getElementById('totalCyclesSinceInstall').value = '';
             });
             submitBtn.disabled = false;
           }, 1000);
