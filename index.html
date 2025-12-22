@@ -383,19 +383,19 @@
         <!-- COMPANY -->
         <div class="field">
           <label class="required">Company Name</label>
-          <input name="companyName" required />
+          <input name="companyName" />
         </div>
 
         <!-- CONTACT NAME -->
         <div class="field">
           <label class="required">Name</label>
-          <input name="contactName" required />
+          <input name="contactName" />
         </div>
 
         <!-- RMA REQUEST TYPE -->
         <div class="field">
           <label class="required">RMA Request Type</label>
-          <select name="rmaRequestType" required>
+          <select name="rmaRequestType">
             <option value="">Select Type</option>
             <option value="Warranty Replacement">Warranty Replacement</option>
             <option value="Warranty C.P.O">Warranty C.P.O</option>
@@ -407,7 +407,7 @@
         <!-- EMAIL -->
         <div class="field">
           <label class="required">Email</label>
-          <input name="email" type="email" required />
+          <input name="email" type="email" />
         </div>
 
         <!-- CUSTOMER NUMBER -->
@@ -419,19 +419,19 @@
         <!-- PHONE -->
         <div class="field">
           <label class="required">Phone</label>
-          <input name="phone" required />
+          <input name="phone" />
         </div>
 
         <!-- SALES ORDER -->
         <div class="field">
           <label class="required">SO #</label>
-          <input name="salesOrderNumber" required />
+          <input name="salesOrderNumber" />
         </div>
 
         <!-- CUSTOMER PO -->
         <div class="field">
           <label class="required">Customer PO #</label>
-          <input name="customerPoNumber" required />
+          <input name="customerPoNumber" />
         </div>
 
         <!-- ORIGINAL TRANSACTION DATE -->
@@ -449,37 +449,37 @@
         <!-- PART NUMBER -->
         <div class="field">
           <label class="required">Part Number (PN)</label>
-          <input name="partNumber" required />
+          <input name="partNumber" />
         </div>
 
         <!-- AIRCRAFT TYPE -->
         <div class="field">
           <label class="required">Aircraft Type</label>
-          <input name="aircraftType" required />
+          <input name="aircraftType" />
         </div>
 
         <!-- SERIAL NUMBER -->
         <div class="field">
           <label class="required">Serial Number (SN)</label>
-          <input name="serialNumber" required />
+          <input name="serialNumber" />
         </div>
 
         <!-- AIRCRAFT SERIAL -->
         <div class="field">
           <label class="required">Aircraft Serial #</label>
-          <input name="aircraftSerialNumber" required />
+          <input name="aircraftSerialNumber" />
         </div>
 
         <!-- INSTALL DATE -->
         <div class="field">
           <label class="required">Install Date</label>
-          <input name="installDate" id="installDate" placeholder="MM/DD/YYYY" required />
+          <input name="installDate" id="installDate" placeholder="MM/DD/YYYY" />
         </div>
 
         <!-- TOTAL TIME -->
         <div class="field">
           <label class="required">Total Time Since Install (Days)</label>
-          <input name="totalTimeSinceInstall" id="totalTimeSinceInstall" readonly required />
+          <input name="totalTimeSinceInstall" id="totalTimeSinceInstall" readonly />
         </div>
 
         <!-- REMOVAL DATE -->
@@ -491,19 +491,19 @@
         <!-- TOTAL CYCLES -->
         <div class="field">
           <label class="required">Total Cycles Since Install</label>
-          <input name="totalCyclesSinceInstall" id="totalCyclesSinceInstall" readonly required />
+          <input name="totalCyclesSinceInstall" id="totalCyclesSinceInstall" readonly />
         </div>
 
         <!-- DISCREPANCY -->
         <div class="field full">
           <label class="required">Discrepancy</label>
-          <textarea name="discrepancy" required></textarea>
+          <textarea name="discrepancy"></textarea>
         </div>
 
         <!-- REASON FOR RETURN -->
         <div class="field full">
           <label class="required">Reason For Return</label>
-          <textarea name="reasonForReturn" required></textarea>
+          <textarea name="reasonForReturn"></textarea>
         </div>
 
         <!-- FILE ATTACHMENTS -->
@@ -767,8 +767,8 @@
           Aircraft_Serial__c: formData.aircraftSerialNumber,
           Original_Transaction_Date__c: formData.originalTransactionDate || null,
           Original_Invoice__c: formData.originalInvoiceNumber || null,
-          Install_Date__c: formData.installDate,
-          Removal_Date__c: formData.removalDate || null,
+          Install_Date__c: null,
+          Removal_Date__c: null,
           Total_time_since_install_of_part__c: formData.totalTimeSinceInstall || "0",
           Total_cycle_since_install_of_part__c: formData.totalCyclesSinceInstall || "0",
           Discrepancy__c: formData.discrepancy,
@@ -921,11 +921,11 @@
         const fileInput = document.getElementById("fileAttachment");
         
         // Basic validation
-        const requiredFields = form.querySelectorAll('[required]');
+        constFields = form.querySelectorAll('[required]');
         let isValid = true;
         let firstInvalidField = null;
         
-        requiredFields.forEach(field => {
+       Fields.forEach(field => {
           if (!field.value.trim()) {
             isValid = false;
             if (!firstInvalidField) firstInvalidField = field;
@@ -936,7 +936,7 @@
         });
 
         if (!isValid) {
-          showModal("error", "Missing Fields", "Please fill in all required fields.");
+          showModal("error", "Missing Fields", "Please fill in all fields.");
           if (firstInvalidField) firstInvalidField.focus();
           return;
         }
