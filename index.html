@@ -769,10 +769,9 @@
           Original_Invoice__c: formData.originalInvoiceNumber || null,
           Install_Date__c: formData.installDate,
           Removal_Date__c: formData.removalDate || null,
-          Total_Time_Since_Install__c: formData.totalTimeSinceInstall || "0",
-          Total_Cycles_Since_Install__c: formData.totalCyclesSinceInstall || "0",
+          Total_time_since_install_of_part__c: formData.totalTimeSinceInstall || "0",
+          Total_cycle_since_install_of_part__c: formData.totalCyclesSinceInstall || "0",
           Discrepancy__c: formData.discrepancy,
-          Reason_For_Return__c: formData.reasonForReturn,
           Sub_Type__c: "RMA"
         };
 
@@ -1037,9 +1036,9 @@
             hideLoading();
             showModal('success', 'Thank You!', 'Your RMA form has been submitted successfully.', function() {
               // Reset form
-              form.reset();
+              //form.reset();
               // Optional: Redirect to confirmation page
-              // window.location.href = "https://crsjetspares.com/thank-you";
+              window.location.href = "https://crsjetspares.com/thank-you";
             });
             submitBtn.disabled = false;
           }, 1000);
