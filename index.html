@@ -913,7 +913,7 @@
                     <path d="M11 16h2V8h3l-4-4-4 4h3z" />
                   </svg>
                   <div class="upload-text">Click to upload files</div>
-                  <div class="upload-subtext">Max 33 files, 5MB total</div>
+                  <div class="upload-subtext">Max 33 files, total size: 5MB</div>
                 </div>
               </label>
 
@@ -1074,6 +1074,9 @@
 
             fileSettingsLoaded = true;
 
+            // Update the file label with allowed formats and max size
+            updateFileLabel();
+
             // Update the upload subtext with dynamic values
             updateUploadSubtext();
 
@@ -1090,15 +1093,29 @@
         }
       }
 
+      function updateFileLabel() {
+        const labels = document.querySelectorAll('.field label');
+        for (let i = 0; i < labels.length; i++) {
+          if (labels[i].textContent.includes('Attach Files')) {
+            updateLabelText(labels[i]);
+            return;
+          }
+        }
+      }
+
+      function updateLabelText(label) {
+        if (ALLOWED_FILE_FORMATS.length > 0) {
+          const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(1);
+          const formatsText = ALLOWED_FILE_FORMATS.join(', ').toUpperCase();
+          label.innerHTML = `Attach Files (Optional) <span style="color: #666; font-weight: 400; font-size: 11px;">(Allowed formats: ${formatsText}, Max total size: ${maxSizeMB}MB)</span>`;
+        }
+      }
+
       function updateUploadSubtext() {
         const uploadSubtext = document.querySelector('.upload-subtext');
         if (uploadSubtext && fileSettingsLoaded) {
           const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(1);
-          uploadSubtext.textContent = `Max ${MAX_FILE_COUNT} files, ${maxSizeMB}MB total${
-            ALLOWED_FILE_FORMATS.length > 0
-              ? `, allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
-              : ''
-          }`;
+          uploadSubtext.textContent = `Max ${MAX_FILE_COUNT} files, total size: ${maxSizeMB}MB`;
         }
       }
 
@@ -1330,9 +1347,6 @@
         } else {
           // Reset upload box to default
           const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(1);
-          const subtextContent = fileSettingsLoaded && ALLOWED_FILE_FORMATS.length > 0
-            ? `Max ${MAX_FILE_COUNT} files, ${maxSizeMB}MB total, allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
-            : `Max ${MAX_FILE_COUNT} files, ${maxSizeMB}MB total`;
 
           uploadContent.innerHTML = `
               <svg viewBox="0 0 24 24" style="width: 48px; height: 48px;">
@@ -1343,7 +1357,7 @@
                   Click to upload files
               </div>
               <div class="upload-subtext">
-                  ${subtextContent}
+                  Max ${MAX_FILE_COUNT} files, total size: ${maxSizeMB}MB
               </div>
           `;
           fileListContainer.style.display = "none";
