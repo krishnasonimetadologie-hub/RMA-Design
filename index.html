@@ -1296,8 +1296,6 @@
           // Display files list
           selectedFilesDiv.innerHTML = "";
 
-          let totalSize = 0;
-
           allSelectedFiles.forEach((file, index) => {
             const fileExtension = getFileExtension(file.name);
             const isValidFormat =
@@ -1306,7 +1304,6 @@
               ALLOWED_FILE_FORMATS.includes(fileExtension);
 
             const isInvalid = !isValidFormat;
-            totalSize += file.size;
 
             let errorMessage = '';
             if (!isValidFormat) {
