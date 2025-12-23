@@ -986,64 +986,78 @@
       const OAUTH_URL = SF_INSTANCE + "/services/oauth2/token";
       const API_ENDPOINT = SF_INSTANCE + "/services/apexrest/caseManagement/";
 
-      // Initialize with default values - will be updated dynamically
-      let rmaSettings = {
-        Maximum_Size__c: 5, // Default 5MB
-        File_Formats__c: [], // Default empty array
-      };
+      // ================= FILE VALIDATION CONSTANTS =================
+      let MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes (default)
+      const MAX_FILE_COUNT = 100000;
+      let ALLOWED_FILE_FORMATS = []; // Will be populated from metadata
+      let fileSettingsLoaded = false;
 
       // ================= GET ATTACHMENT VALIDATIONS =================
-      async function getAttachmentValidations(accessToken) {
+      async function fetchFileSettings() {
         try {
-          const query =
-            "SELECT File_Formats__c, Maximum_Size__c FROM FilesAttachmentSettings__mdt WHERE DeveloperName = 'RMASetting'";
-          const url =
-            SF_INSTANCE +
-            "/services/data/v62.0/query?q=" +
-            encodeURIComponent(query);
+          const accessToken = await getAccessToken();
+
+          // Query custom metadata for RMASetting
+          const query = "SELECT File_Formats__c, Maximum_Size__c FROM FilesAttachmentSettings__mdt WHERE DeveloperName='RMASetting' LIMIT 1";
+          const url = SF_INSTANCE + '/services/data/v62.0/query?q=' + encodeURIComponent(query);
 
           const response = await fetch(url, {
-            method: "GET",
+            method: 'GET',
             headers: {
-              Authorization: "Bearer " + accessToken,
-              "Content-Type": "application/json",
-            },
+              'Authorization': 'Bearer ' + accessToken,
+              'Content-Type': 'application/json'
+            }
           });
 
           if (!response.ok) {
-            throw new Error("Failed to query attachment settings");
+            console.error('Failed to fetch file settings from metadata');
+            return false;
           }
 
           const data = await response.json();
+
           if (data.records && data.records.length > 0) {
-            return {
-              Maximum_Size__c: data.records[0].Maximum_Size__c || 5,
-              File_Formats__c: data.records[0].File_Formats__c
-                ? data.records[0].File_Formats__c.split(",").map((item) =>
-                    item.trim().toLowerCase()
-                  )
-                : [],
-            };
-          } else {
-            console.warn("Attachment settings not found, using defaults");
-            return {
-              Maximum_Size__c: 5,
-              File_Formats__c: [],
-            };
+            const settings = data.records[0];
+
+            // Parse file formats (comma-separated)
+            if (settings.File_Formats__c) {
+              ALLOWED_FILE_FORMATS = settings.File_Formats__c
+                .split(',')
+                .map(format => format.trim().toLowerCase())
+                .filter(format => format.length > 0);
+            }
+
+            // Parse maximum size (in MB)
+            if (settings.Maximum_Size__c) {
+              MAX_FILE_SIZE = parseFloat(settings.Maximum_Size__c) * 1024 * 1024; // Convert MB to bytes
+            }
+
+            fileSettingsLoaded = true;
+
+            // Update the upload subtext with dynamic values
+            updateUploadSubtext();
+
+            return true;
           }
+
+          return false;
         } catch (error) {
-          console.error("Error fetching attachment validations:", error);
-          // Return defaults on error
-          return {
-            Maximum_Size__c: 5,
-            File_Formats__c: [],
-          };
+          console.error('Error fetching file settings:', error);
+          return false;
         }
       }
 
-      // ================= FILE VALIDATION CONSTANTS =================
-      let MAX_FILE_SIZE = 5 * 1024 * 1024;
-      let MAX_FILE_COUNT = 100000;
+      function updateUploadSubtext() {
+        const uploadSubtext = document.querySelector('.upload-subtext');
+        if (uploadSubtext && fileSettingsLoaded) {
+          const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(1);
+          uploadSubtext.textContent = `Max ${MAX_FILE_COUNT} files, ${maxSizeMB}MB total${
+            ALLOWED_FILE_FORMATS.length > 0
+              ? `, allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
+              : ''
+          }`;
+        }
+      }
 
       // Track files separately from the input
       let allSelectedFiles = [];
@@ -1087,13 +1101,18 @@
         return icons[ext] || "📎";
       }
 
+      // Function to get file extension
+      function getFileExtension(filename) {
+        return filename.split('.').pop().toLowerCase();
+      }
+
       function validateFiles(files) {
         const validation = {
           valid: true,
           errors: [],
-          oversizedFiles: [],
+          invalidFormatFiles: [],
           totalSize: 0,
-          validFiles: [],
+          validFiles: []
         };
 
         // Check file count
@@ -1104,44 +1123,37 @@
           );
         }
 
-        // Check each file
+        // Check each file for format and calculate total size
         Array.from(files).forEach((file, index) => {
-          const fileExtension = file.name.split(".").pop().toLowerCase();
+          let fileIsValid = true;
 
-          if (file.size > MAX_FILE_SIZE) {
-            validation.valid = false;
-            validation.oversizedFiles.push({
-              name: file.name,
-              size: file.size,
-              index: index,
-            });
-            validation.errors.push(
-              `"${file.name}" exceeds ${
-                rmaSettings.Maximum_Size__c
-              }MB limit (${formatFileSize(file.size)})`
-            );
-          } else if (
-            rmaSettings.File_Formats__c.length > 0 &&
-            !rmaSettings.File_Formats__c.includes(fileExtension)
-          ) {
-            validation.valid = false;
-            validation.oversizedFiles.push({
-              name: file.name,
-              size: file.size,
-              index: index,
-            });
-            validation.errors.push(
-              `"${
-                file.name
-              }" has an invalid file type. Allowed types: ${rmaSettings.File_Formats__c.join(
-                ", "
-              )}`
-            );
-          } else {
+          // Check file format if settings are loaded
+          if (fileSettingsLoaded && ALLOWED_FILE_FORMATS.length > 0) {
+            const fileExt = getFileExtension(file.name);
+            if (!ALLOWED_FILE_FORMATS.includes(fileExt)) {
+              validation.valid = false;
+              fileIsValid = false;
+              validation.invalidFormatFiles.push({
+                name: file.name,
+                extension: fileExt,
+                index: index
+              });
+              validation.errors.push(`"${file.name}" has invalid format. Allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`);
+            }
+          }
+
+          // Add to valid files and calculate total size
+          if (fileIsValid) {
             validation.validFiles.push(file);
             validation.totalSize += file.size;
           }
         });
+
+        // Check total size of all files combined
+        if (fileSettingsLoaded && validation.totalSize > MAX_FILE_SIZE) {
+          validation.valid = false;
+          validation.errors.push(`Total file size (${formatFileSize(validation.totalSize)}) exceeds maximum allowed (${formatFileSize(MAX_FILE_SIZE)})`);
+        }
 
         return validation;
       }
@@ -1208,14 +1220,19 @@
           let totalSize = 0;
 
           allSelectedFiles.forEach((file, index) => {
-            const isOversized = file.size > MAX_FILE_SIZE;
-            const fileExtension = file.name.split(".").pop().toLowerCase();
+            const fileExtension = getFileExtension(file.name);
             const isValidFormat =
-              rmaSettings.File_Formats__c.length === 0 ||
-              rmaSettings.File_Formats__c.includes(fileExtension);
+              !fileSettingsLoaded ||
+              ALLOWED_FILE_FORMATS.length === 0 ||
+              ALLOWED_FILE_FORMATS.includes(fileExtension);
 
-            const isInvalid = isOversized || !isValidFormat;
+            const isInvalid = !isValidFormat;
             totalSize += file.size;
+
+            let errorMessage = '';
+            if (!isValidFormat) {
+              errorMessage = ' (Invalid format!)';
+            }
 
             const fileItem = document.createElement("div");
             fileItem.className = `file-item ${isInvalid ? "error" : ""}`;
@@ -1228,14 +1245,7 @@
                         isInvalid ? "error" : ""
                       }" title="${file.name}">${file.name}</span>
                       <span class="file-size ${isInvalid ? "error" : ""}">
-                          ${formatFileSize(file.size)}
-                          ${
-                            isOversized
-                              ? " (Too large!)"
-                              : !isValidFormat
-                              ? " (Invalid format!)"
-                              : ""
-                          }
+                          ${formatFileSize(file.size)}${errorMessage}
                       </span>
                   </div>
                   <button type="button" class="remove-file" data-index="${index}">×</button>
@@ -1246,11 +1256,13 @@
           // Add summary
           const summaryDiv = document.createElement("div");
           summaryDiv.className = "file-summary";
+          const totalSizeExceeded = fileSettingsLoaded && totalSize > MAX_FILE_SIZE;
           summaryDiv.innerHTML = `
-              <div class="total-count">${
-                allSelectedFiles.length
-              } files uploaded</div>
-              <div class="total-size">Total: ${formatFileSize(totalSize)}</div>
+              <div class="total-count">${allSelectedFiles.length} of ${MAX_FILE_COUNT} files</div>
+              <div class="total-size" style="${totalSizeExceeded ? 'color: #dc3545; font-weight: 700;' : ''}">
+                  Total: ${formatFileSize(totalSize)}${totalSizeExceeded ? ' (Exceeds limit!)' : ''}
+                  ${fileSettingsLoaded ? ' / ' + formatFileSize(MAX_FILE_SIZE) : ''}
+              </div>
           `;
           selectedFilesDiv.appendChild(summaryDiv);
 
@@ -1297,21 +1309,50 @@
 
       function validateFilesBeforeSubmit() {
         if (allSelectedFiles.length === 0) {
-          return { valid: true, message: "" };
+          return { valid: true, message: '' };
         }
 
-        const validation = validateFiles(allSelectedFiles);
+        // Calculate total size of all files
+        let totalSize = 0;
+        const invalidFormatFiles = [];
 
-        if (!validation.valid) {
+        Array.from(allSelectedFiles).forEach((file) => {
+          totalSize += file.size;
+
+          // Check file format if settings are loaded
+          if (fileSettingsLoaded && ALLOWED_FILE_FORMATS.length > 0) {
+            const fileExt = getFileExtension(file.name);
+            if (!ALLOWED_FILE_FORMATS.includes(fileExt)) {
+              invalidFormatFiles.push(file.name);
+            }
+          }
+        });
+
+        // Check for invalid format files
+        if (invalidFormatFiles.length > 0) {
           return {
             valid: false,
-            message:
-              "Please fix file upload errors before submitting. " +
-              validation.errors.join(", "),
+            message: `The following file(s) have invalid format: ${invalidFormatFiles.join(', ')}. Allowed formats: ${ALLOWED_FILE_FORMATS.join(', ').toUpperCase()}`
           };
         }
 
-        return { valid: true, message: "" };
+        // Check total size
+        if (fileSettingsLoaded && totalSize > MAX_FILE_SIZE) {
+          return {
+            valid: false,
+            message: `Total file size (${formatFileSize(totalSize)}) exceeds maximum allowed (${formatFileSize(MAX_FILE_SIZE)}). Please remove some files.`
+          };
+        }
+
+        // Check file count
+        if (allSelectedFiles.length > MAX_FILE_COUNT) {
+          return {
+            valid: false,
+            message: `Maximum ${MAX_FILE_COUNT} files allowed. You have ${allSelectedFiles.length} files.`
+          };
+        }
+
+        return { valid: true, message: '' };
       }
 
       // ================= DRAG & DROP FUNCTIONALITY =================
@@ -1365,10 +1406,10 @@
           // Update the file input
           updateFileInputWithAllFiles();
 
-          // Show errors for oversized/invalid files
-          if (validation.oversizedFiles.length > 0) {
+          // Show errors for invalid format files
+          if (validation.invalidFormatFiles && validation.invalidFormatFiles.length > 0) {
             showFileValidationError(
-              `${validation.oversizedFiles.length} file(s) exceed ${rmaSettings.Maximum_Size__c}MB limit or have invalid formats and were not added.`
+              `${validation.invalidFormatFiles.length} file(s) have invalid format and were not added. Allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
             );
           }
 
@@ -2092,10 +2133,10 @@
             }
           });
 
-          // Show errors for invalid files
-          if (validation.oversizedFiles.length > 0) {
+          // Show errors for invalid format files
+          if (validation.invalidFormatFiles && validation.invalidFormatFiles.length > 0) {
             showFileValidationError(
-              `${validation.oversizedFiles.length} file(s) exceed ${rmaSettings.Maximum_Size__c}MB limit or have invalid formats and were not added.`
+              `${validation.invalidFormatFiles.length} file(s) have invalid format and were not added. Allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
             );
           }
 
@@ -2110,21 +2151,7 @@
 
         // Load attachment settings dynamically
         try {
-          const accessToken = await getAccessToken();
-          rmaSettings = await getAttachmentValidations(accessToken);
-          MAX_FILE_SIZE = rmaSettings.Maximum_Size__c * 1024 * 1024;
-
-          // Update the upload subtext with dynamic values
-          const uploadSubtext = document.querySelector(".upload-subtext");
-          if (uploadSubtext) {
-            uploadSubtext.textContent = `Max ${MAX_FILE_COUNT} files, ${
-              rmaSettings.Maximum_Size__c
-            }MB each${
-              rmaSettings.File_Formats__c.length > 0
-                ? `, allowed formats: ${rmaSettings.File_Formats__c.join(", ")}`
-                : ""
-            }`;
-          }
+          await fetchFileSettings();
         } catch (error) {
           console.error("Failed to load attachment settings:", error);
           // Continue with defaults
