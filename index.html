@@ -736,9 +736,6 @@
               <div class="upload-text">
                 Click to upload files
               </div>
-              <div class="upload-subtext">
-                Max 33 files, 5MB each
-              </div>
             </div>
           </label>
           
@@ -832,7 +829,7 @@
       const rmaSettings = getAttachmentValidations();
         
 async function getAttachmentValidations(){
-    const query = "SELECT File_Formats__c, Maximum_Size__c FROM FilesAttachmentSettings__mdt WHERE DeveloperName = 'CoreCardSetting'"
+    const query = "SELECT File_Formats__c, Maximum_Size__c FROM FilesAttachmentSettings__mdt WHERE DeveloperName = 'RMASetting'"
     const url = SF_INSTANCE + '/services/data/v62.0/query?q=' + encodeURIComponent(query);
     
     const accessToken = await getAccessToken();
@@ -846,7 +843,7 @@ async function getAttachmentValidations(){
     });
 
     if (!response.ok) {
-        throw new Error('Failed to query Record Type');
+        throw new Error('Failed to fetch the RMA Settings');
     }
 
     const data = await response.json();
@@ -997,9 +994,7 @@ async function getAttachmentValidations(){
                 <div class="upload-text">
                   Click to upload files
                 </div>
-                <div class="upload-subtext">
-                  Max 33 files, 5MB each
-                </div>
+                
               `;
               fileListContainer.style.display = 'none';
               return;
@@ -1071,9 +1066,6 @@ async function getAttachmentValidations(){
             </svg>
             <div class="upload-text">
               Click to upload files
-            </div>
-            <div class="upload-subtext">
-              Max 33 files, 5MB each
             </div>
           `;
           fileListContainer.style.display = 'none';
