@@ -831,7 +831,7 @@
       
       const rmaSettings = getAttachmentValidations();
         
-function getAttachmentValidations(){
+async function getAttachmentValidations(){
     const query = "SELECT File_Formats__c, Maximum_Size__c FROM FilesAttachmentSettings__mdt WHERE DeveloperName = 'CoreCardSetting'"
     const url = SF_INSTANCE + '/services/data/v62.0/query?q=' + encodeURIComponent(query);
     
