@@ -379,6 +379,202 @@
         border-radius: 4px;
         width: 100%;
       }
+
+
+      /* ===== FILE UPLOAD WITH PREVIEW ===== */
+.upload-box {
+  position: relative;
+  width: 100%;
+  min-height: 160px;
+  background: #f3f6fb;
+  border: 2px dashed #c7d6ff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  padding: 20px;
+}
+
+.upload-box:hover {
+  background: #eef3ff;
+  border-color: #355c9a;
+}
+
+.upload-box.error {
+  border-color: #dc3545;
+  background: #fff5f5;
+  animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.upload-content {
+  text-align: center;
+  color: #444;
+}
+
+.upload-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 10px 0 5px;
+}
+
+.upload-subtext {
+  font-size: 12px;
+  color: #666;
+}
+
+/* hide real input */
+.upload-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Validation message */
+.validation-message {
+  animation: fadeIn 0.3s ease;
+  padding: 8px 12px;
+  background: #fff5f5;
+  border-radius: 4px;
+  border-left: 3px solid #dc3545;
+  color: #dc3545;
+  font-size: 12px;
+}
+
+/* File list styles */
+.file-list-container {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-color: #c7d6ff;
+}
+
+.file-item.error {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-icon {
+  font-size: 20px;
+  color: #355c9a;
+  flex-shrink: 0;
+}
+
+.file-icon.error {
+  color: #dc3545;
+}
+
+.file-name {
+  font-size: 13px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.file-name.error {
+  color: #dc3545;
+}
+
+.file-size {
+  font-size: 11.5px;
+  color: #666;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.file-size.error {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.remove-file {
+  background: #ff4444;
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  margin-left: 8px;
+}
+
+.remove-file:hover {
+  background: #cc0000;
+}
+
+/* Summary styles */
+.file-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f0f4f9;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.total-size {
+  color: #333;
+  font-weight: 600;
+}
+
+.total-count {
+  color: #355c9a;
+  font-weight: 600;
+}
+
+/* Drag & drop feedback */
+.upload-box.drag-over {
+  border-color: #355c9a;
+  background: #eef3ff;
+  transform: scale(1.01);
+}
     </style>
   </head>
 
@@ -515,14 +711,56 @@
           <textarea name="discrepancy" ></textarea>
         </div>
 
+
+
+
+        
         <!-- FILE ATTACHMENTS -->
         <div class="field full">
           <label>Attach Files (Optional)</label>
-          <div class="file-input-wrapper">
-            <input id="fileAttachment" type="file" multiple />
+          
+          <!-- Upload Box Design -->
+          <label class="upload-box" style="margin-top: 5px;">
+            <input
+              id="fileAttachment"
+              class="upload-input"
+              type="file"
+              multiple
+            />
+            
+            <div class="upload-content" id="uploadContent">
+              <svg viewBox="0 0 24 24" style="width: 48px; height: 48px;">
+                <path d="M5 20h14a1 1 0 0 0 1-1v-4h-2v3H6v-3H4v4a1 1 0 0 0 1 1z"/>
+                <path d="M11 16h2V8h3l-4-4-4 4h3z"/>
+              </svg>
+              <div class="upload-text">
+                Click to upload files
+              </div>
+              <div class="upload-subtext">
+                Max 33 files, 5MB each
+              </div>
+            </div>
+          </label>
+          
+          <!-- Validation message -->
+          <div id="fileValidation" class="validation-message" style="display: none; margin-top: 5px;"></div>
+          
+          <!-- Selected files display -->
+          <div id="fileList" class="file-list-container" style="display: none; margin-top: 10px;">
+            <div style="font-size: 13px; font-weight: 600; color: #444; margin-bottom: 8px;">
+              Selected Files:
+            </div>
+            <div id="selectedFiles" style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; background: #f9f9f9;">
+              <!-- Files will be listed here -->
+            </div>
           </div>
         </div>
 
+
+
+
+
+        
         <!-- TERMS -->
         <div class="disclaimer full">
           <strong>Terms & Conditions</strong>
@@ -532,6 +770,8 @@
           </a>. 
           All information provided must be accurate and complete.
         </div>
+
+        
 
         <div class="submit-wrap">
           <button type="submit" id="submitBtn">Submit</button>
@@ -561,7 +801,326 @@
       </div>
     </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     <script>
+
+      // ================= FILE VALIDATION CONSTANTS =================
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+      const MAX_FILE_COUNT = 33;
+      
+      // ================= FILE UTILITY FUNCTIONS =================
+      function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      }
+      
+      function getFileIcon(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const icons = {
+          pdf: '📄',
+          doc: '📝',
+          docx: '📝',
+          txt: '📃',
+          jpg: '🖼️',
+          jpeg: '🖼️',
+          png: '🖼️',
+          gif: '🖼️',
+          bmp: '🖼️',
+          tiff: '🖼️',
+          svg: '🖼️',
+          xls: '📊',
+          xlsx: '📊',
+          zip: '📦',
+          rar: '📦',
+          '7z': '📦',
+          xml: '📋',
+          csv: '📊',
+          json: '📋',
+          log: '📋',
+          ppt: '📊',
+          pptx: '📊'
+        };
+        return icons[ext] || '📎';
+      }
+      
+      function validateFiles(files) {
+        const validation = {
+          valid: true,
+          errors: [],
+          oversizedFiles: [],
+          totalSize: 0,
+          validFiles: []
+        };
+        
+        // Check file count
+        if (files.length > MAX_FILE_COUNT) {
+          validation.valid = false;
+          validation.errors.push(`Maximum ${MAX_FILE_COUNT} files allowed. You selected ${files.length} files.`);
+        }
+        
+        // Check each file
+        Array.from(files).forEach((file, index) => {
+          if (file.size > MAX_FILE_SIZE) {
+            validation.valid = false;
+            validation.oversizedFiles.push({
+              name: file.name,
+              size: file.size,
+              index: index
+            });
+            validation.errors.push(`"${file.name}" exceeds 5MB limit (${formatFileSize(file.size)})`);
+          } else {
+            validation.validFiles.push(file);
+            validation.totalSize += file.size;
+          }
+        });
+        
+        return validation;
+      }
+      
+      function showFileValidationError(message) {
+        const validationDiv = document.getElementById('fileValidation');
+        const uploadBox = document.querySelector('.upload-box');
+        
+        validationDiv.textContent = message;
+        validationDiv.style.display = 'block';
+        uploadBox.classList.add('error');
+        
+        // Remove error state after 5 seconds
+        setTimeout(() => {
+          validationDiv.style.display = 'none';
+          uploadBox.classList.remove('error');
+        }, 5000);
+      }
+      
+      function displaySelectedFiles() {
+        const fileInput = document.getElementById('fileAttachment');
+        const fileListContainer = document.getElementById('fileList');
+        const selectedFilesDiv = document.getElementById('selectedFiles');
+        const uploadContent = document.getElementById('uploadContent');
+        const validationDiv = document.getElementById('fileValidation');
+        const uploadBox = document.querySelector('.upload-box');
+        
+        // Clear validation
+        validationDiv.style.display = 'none';
+        uploadBox.classList.remove('error');
+        
+        if (fileInput.files.length > 0) {
+          // Validate files
+          const validation = validateFiles(fileInput.files);
+          
+          if (!validation.valid) {
+            showFileValidationError(validation.errors.join(', '));
+            
+            // Filter out invalid files
+            const dataTransfer = new DataTransfer();
+            validation.validFiles.forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+            
+            // If no valid files remain, reset
+            if (fileInput.files.length === 0) {
+              uploadContent.innerHTML = `
+                <svg viewBox="0 0 24 24" style="width: 48px; height: 48px;">
+                  <path d="M5 20h14a1 1 0 0 0 1-1v-4h-2v3H6v-3H4v4a1 1 0 0 0 1 1z"/>
+                  <path d="M11 16h2V8h3l-4-4-4 4h3z"/>
+                </svg>
+                <div class="upload-text">
+                  Click to upload files
+                </div>
+                <div class="upload-subtext">
+                  Max 33 files, 5MB each
+                </div>
+              `;
+              fileListContainer.style.display = 'none';
+              return;
+            }
+          }
+          
+          // Update upload box appearance
+          uploadContent.innerHTML = `
+            <svg viewBox="0 0 24 24" style="width: 48px; height: 48px;">
+              <path d="M5 20h14a1 1 0 0 0 1-1v-4h-2v3H6v-3H4v4a1 1 0 0 0 1 1z"/>
+              <path d="M11 16h2V8h3l-4-4-4 4h3z"/>
+            </svg>
+            <div class="upload-text">
+              ${fileInput.files.length} file${fileInput.files.length > 1 ? 's' : ''} selected
+            </div>
+            <div class="upload-subtext">
+              Click to change files
+            </div>
+          `;
+          
+          // Display files list
+          selectedFilesDiv.innerHTML = '';
+          
+          let totalSize = 0;
+          
+          Array.from(fileInput.files).forEach((file, index) => {
+            const isOversized = file.size > MAX_FILE_SIZE;
+            totalSize += file.size;
+            
+            const fileItem = document.createElement('div');
+            fileItem.className = `file-item ${isOversized ? 'error' : ''}`;
+            fileItem.innerHTML = `
+              <div class="file-info">
+                <span class="file-icon ${isOversized ? 'error' : ''}">${getFileIcon(file.name)}</span>
+                <span class="file-name ${isOversized ? 'error' : ''}" title="${file.name}">${file.name}</span>
+                <span class="file-size ${isOversized ? 'error' : ''}">${formatFileSize(file.size)}${isOversized ? ' (Too large!)' : ''}</span>
+              </div>
+              <button type="button" class="remove-file" data-index="${index}">×</button>
+            `;
+            selectedFilesDiv.appendChild(fileItem);
+          });
+          
+          // Add summary
+          const summaryDiv = document.createElement('div');
+          summaryDiv.className = 'file-summary';
+          summaryDiv.innerHTML = `
+            <div class="total-count">${fileInput.files.length} of ${MAX_FILE_COUNT} files</div>
+            <div class="total-size">Total: ${formatFileSize(totalSize)}</div>
+          `;
+          selectedFilesDiv.appendChild(summaryDiv);
+          
+          fileListContainer.style.display = 'block';
+          
+          // Add event listeners to remove buttons
+          selectedFilesDiv.querySelectorAll('.remove-file').forEach(button => {
+            button.addEventListener('click', function(e) {
+              e.stopPropagation();
+              const index = parseInt(this.getAttribute('data-index'));
+              removeFile(index);
+            });
+          });
+          
+        } else {
+          // Reset upload box to default
+          uploadContent.innerHTML = `
+            <svg viewBox="0 0 24 24" style="width: 48px; height: 48px;">
+              <path d="M5 20h14a1 1 0 0 0 1-1v-4h-2v3H6v-3H4v4a1 1 0 0 0 1 1z"/>
+              <path d="M11 16h2V8h3l-4-4-4 4h3z"/>
+            </svg>
+            <div class="upload-text">
+              Click to upload files
+            </div>
+            <div class="upload-subtext">
+              Max 33 files, 5MB each
+            </div>
+          `;
+          fileListContainer.style.display = 'none';
+        }
+      }
+      
+      function removeFile(index) {
+        const fileInput = document.getElementById('fileAttachment');
+        const files = Array.from(fileInput.files);
+        
+        if (index >= 0 && index < files.length) {
+          files.splice(index, 1);
+          
+          // Create a new DataTransfer to update the file input
+          const dataTransfer = new DataTransfer();
+          files.forEach(file => dataTransfer.items.add(file));
+          fileInput.files = dataTransfer.files;
+          
+          // Update the display
+          displaySelectedFiles();
+        }
+      }
+      
+      function validateFilesBeforeSubmit() {
+        const fileInput = document.getElementById('fileAttachment');
+        
+        if (fileInput.files.length === 0) {
+          return { valid: true, message: '' };
+        }
+        
+        const validation = validateFiles(fileInput.files);
+        
+        if (!validation.valid) {
+          return { 
+            valid: false, 
+            message: 'Please fix file upload errors before submitting. ' + validation.errors.join(', ')
+          };
+        }
+        
+        return { valid: true, message: '' };
+      }
+      
+      // ================= DRAG & DROP FUNCTIONALITY =================
+      function setupDragAndDrop() {
+        const uploadBox = document.querySelector('.upload-box');
+        
+        uploadBox.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          uploadBox.classList.add('drag-over');
+        });
+        
+        uploadBox.addEventListener('dragleave', (e) => {
+          e.preventDefault();
+          uploadBox.classList.remove('drag-over');
+        });
+        
+        uploadBox.addEventListener('drop', (e) => {
+          e.preventDefault();
+          uploadBox.classList.remove('drag-over');
+          
+          const files = e.dataTransfer.files;
+          const fileInput = document.getElementById('fileAttachment');
+          
+          // Validate before adding
+          const validation = validateFiles(files);
+          
+          // Create a new DataTransfer to handle multiple selections
+          const dataTransfer = new DataTransfer();
+          
+          // Add existing files
+          Array.from(fileInput.files).forEach(file => dataTransfer.items.add(file));
+          
+          // Check if adding new files would exceed limit
+          const totalFilesAfterAdd = dataTransfer.files.length + validation.validFiles.length;
+          if (totalFilesAfterAdd > MAX_FILE_COUNT) {
+            showFileValidationError(`Cannot add files. Maximum ${MAX_FILE_COUNT} files allowed. You would have ${totalFilesAfterAdd} files.`);
+            return;
+          }
+          
+          // Add valid files
+          validation.validFiles.forEach(file => dataTransfer.items.add(file));
+          
+          // Show errors for oversized files
+          if (validation.oversizedFiles.length > 0) {
+            showFileValidationError(`${validation.oversizedFiles.length} file(s) exceed 5MB limit and were not added.`);
+          }
+          
+          fileInput.files = dataTransfer.files;
+          
+          // Trigger change event
+          fileInput.dispatchEvent(new Event('change'));
+        });
+      }
+
+
+      
       // ================= CONFIGURATION =================
       const CLIENT_ID = "3MVG9O_Hkc8TP1aFEeEWU9ZyX2f05bkHPl2XawuPFSJwal8ZF1mDPue9o0kPDBVcOU64PRCCEZnQq2aIJmKv5";
       const CLIENT_SECRET = "4DA156C1380C7AA53FCE2C408620F764D3D46C7C4453D58077B173206EA351C5";
@@ -945,7 +1504,7 @@
       // ================= FORM SUBMISSION =================
       async function handleFormSubmit(event) {
         event.preventDefault();
-        
+  
         const form = event.target;
         const submitBtn = document.getElementById("submitBtn");
         const fileInput = document.getElementById("fileAttachment");
@@ -964,13 +1523,13 @@
             field.style.border = "none";
           }
         });
-
+      
         if (!isValid) {
           showModal("error", "Missing Fields", "Please fill in all required fields.");
           if (firstInvalidField) firstInvalidField.focus();
           return;
         }
-
+      
         // Validate email format
         const emailField = form.querySelector('[name="email"]');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -979,7 +1538,14 @@
           emailField.focus();
           return;
         }
-
+      
+        // Validate files before proceeding
+        const fileValidation = validateFilesBeforeSubmit();
+        if (!fileValidation.valid) {
+          showModal('error', 'File Upload Error', fileValidation.message);
+          return;
+        }
+      
         // Extract SO number
         const salesOrderField = form.querySelector('[name="salesOrderNumber"]');
         const salesOrderNumber = extractSO(salesOrderField.value);
@@ -1125,6 +1691,11 @@
             this.style.border = 'none';
           });
         });
+        
+        // Setup file upload functionality
+        const fileInput = document.getElementById('fileAttachment');
+        fileInput.addEventListener('change', displaySelectedFiles);
+        setupDragAndDrop();
       });
     </script>
   </body>
