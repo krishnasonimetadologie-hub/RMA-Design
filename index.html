@@ -1069,7 +1069,7 @@ async function getAttachmentValidations(accessToken) {
           const summaryDiv = document.createElement('div');
           summaryDiv.className = 'file-summary';
           summaryDiv.innerHTML = `
-            <div class="total-count">${fileInput.files.length} of ${MAX_FILE_COUNT} files</div>
+            <div class="total-count">${fileInput.files.length} files uploaded </div>
             <div class="total-size">Total: ${formatFileSize(totalSize)}</div>
           `;
           selectedFilesDiv.appendChild(summaryDiv);
