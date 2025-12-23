@@ -736,6 +736,9 @@
               <div class="upload-text">
                 Click to upload files
               </div>
+              <div class="upload-subtext">
+                Max 33 files, 5MB each
+              </div>
             </div>
           </label>
           
@@ -832,7 +835,7 @@ function getAttachmentValidations(){
     const query = "SELECT File_Formats__c, Maximum_Size__c FROM FilesAttachmentSettings__mdt WHERE DeveloperName = 'CoreCardSetting'"
     const url = SF_INSTANCE + '/services/data/v62.0/query?q=' + encodeURIComponent(query);
     
-    const accessToken = getAccessToken();
+    const accessToken = await getAccessToken();
 
     const response = await fetch(url, {
         method: 'GET',
