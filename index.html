@@ -873,7 +873,7 @@
                     <path d="M11 16h2V8h3l-4-4-4 4h3z" />
                   </svg>
                   <div class="upload-text">Click to upload files</div>
-                  <div class="upload-subtext">Click or drag files here</div>
+                  <div class="upload-subtext">Max 33 files, 5MB total</div>
                 </div>
               </label>
 
@@ -988,7 +988,7 @@
 
       // ================= FILE VALIDATION CONSTANTS =================
       let MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes (default)
-      const MAX_FILE_COUNT = 100000;
+      const MAX_FILE_COUNT = 33;
       let ALLOWED_FILE_FORMATS = []; // Will be populated from metadata
       let fileSettingsLoaded = false;
 
@@ -1037,6 +1037,9 @@
             // Update the upload subtext with dynamic values
             updateUploadSubtext();
 
+            // Update the file input accept attribute
+            updateFileInputAccept();
+
             return true;
           }
 
@@ -1056,6 +1059,14 @@
               ? `, allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
               : ''
           }`;
+        }
+      }
+
+      function updateFileInputAccept() {
+        const fileInput = document.getElementById('fileAttachment');
+        if (fileInput && ALLOWED_FILE_FORMATS.length > 0) {
+          // Create accept attribute with dot prefix for each format
+          fileInput.setAttribute('accept', ALLOWED_FILE_FORMATS.map(format => '.' + format).join(','));
         }
       }
 
@@ -1278,6 +1289,11 @@
           });
         } else {
           // Reset upload box to default
+          const maxSizeMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(1);
+          const subtextContent = fileSettingsLoaded && ALLOWED_FILE_FORMATS.length > 0
+            ? `Max ${MAX_FILE_COUNT} files, ${maxSizeMB}MB total, allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
+            : `Max ${MAX_FILE_COUNT} files, ${maxSizeMB}MB total`;
+
           uploadContent.innerHTML = `
               <svg viewBox="0 0 24 24" style="width: 48px; height: 48px;">
                   <path d="M5 20h14a1 1 0 0 0 1-1v-4h-2v3H6v-3H4v4a1 1 0 0 0 1 1z"/>
@@ -1287,7 +1303,7 @@
                   Click to upload files
               </div>
               <div class="upload-subtext">
-                  Click or drag files here
+                  ${subtextContent}
               </div>
           `;
           fileListContainer.style.display = "none";
