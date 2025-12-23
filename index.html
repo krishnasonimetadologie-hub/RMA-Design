@@ -76,12 +76,46 @@
         margin-bottom: 30px;
       }
 
+      /* ===== FORM SECTIONS ===== */
+      .form-section {
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e0e6f0;
+      }
+
+      .form-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 20px;
+      }
+
+      .section-title {
+        font-size: 17px;
+        color: #1f3c6d;
+        font-weight: 600;
+        margin-bottom: 18px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid #355c9a;
+
+        display: flex;
+        align-items: center;
+      }
+
+      .section-title::before {
+        content: "";
+        display: inline-block;
+        width: 6px;
+        height: 18px;
+        background-color: #355c9a;
+        margin-right: 10px;
+        border-radius: 1px;
+      }
+
       /* ===== FORM GRID ===== */
       .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         column-gap: 36px;
-        row-gap: 20px;
+        row-gap: 18px;
       }
 
       .field {
@@ -90,9 +124,10 @@
       }
 
       .field label {
-        font-size: 13.5px;
+        font-size: 13px;
         color: #333;
         margin-bottom: 6px;
+        font-weight: bolder;
       }
 
       .required::after {
@@ -104,19 +139,28 @@
       .field input,
       .field select,
       .field textarea {
-        height: 35px;
-        padding: 0px 10px;
+        height: 36px;
+        padding: 0px 12px;
         font-size: 14px;
-        border-radius: 4px;
-        border: none;
-        background: #f2f5f9;
+        border-radius: 5px;
+        border: 1px solid #d0d7e5;
+        background: #f8fafc;
         outline: none;
         font-family: Arial, Helvetica, sans-serif;
+        transition: all 0.2s ease;
+      }
+
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        border-color: #355c9a;
+        background: #ffffff;
+        box-shadow: 0 0 0 2px rgba(53, 92, 154, 0.1);
       }
 
       /* Date input specific styling */
       .field input[type="date"] {
-        padding: 0px 8px;
+        padding: 0px 10px;
       }
 
       /* Placeholder styling for date inputs */
@@ -130,15 +174,17 @@
       }
 
       .field textarea {
-        padding: 8px 10px;
-        height: 70px !important;
+        padding: 10px 12px;
+        height: 80px !important;
         resize: vertical;
-        min-height: 70px;
+        min-height: 80px;
+        line-height: 1.4;
       }
 
       input[readonly] {
-        background: #e7ebf2;
+        background: #edf1f7;
         cursor: not-allowed;
+        border-color: #c8d1e0;
       }
 
       .full {
@@ -151,16 +197,26 @@
         font-size: 12.8px;
         color: #222;
         line-height: 1.55;
+        padding: 16px;
+        background: #f8fafc;
+        border-radius: 6px;
+        border-left: 4px solid #355c9a;
       }
 
       .disclaimer strong {
         display: block;
         margin-bottom: 6px;
+        color: #1f3c6d;
       }
 
       .disclaimer a {
         color: #1f3c6d;
         text-decoration: underline;
+        font-weight: 600;
+      }
+
+      .disclaimer a:hover {
+        color: #2a4c85;
       }
 
       /* ===== SUBMIT ===== */
@@ -173,20 +229,30 @@
         background: #355c9a;
         color: #fff;
         border: none;
-        padding: 10px 42px;
+        padding: 12px 46px;
         font-size: 15px;
+        font-weight: 600;
         border-radius: 6px;
         cursor: pointer;
-        transition: background 0.2s;
+        transition: all 0.2s ease;
+        box-shadow: 0 3px 8px rgba(53, 92, 154, 0.2);
       }
 
       .submit-wrap button:hover {
         background: #2a4c85;
+        transform: translateY(-1px);
+        box-shadow: 0 5px 12px rgba(53, 92, 154, 0.3);
+      }
+
+      .submit-wrap button:active {
+        transform: translateY(0);
       }
 
       .submit-wrap button:disabled {
         background: #cccccc;
         cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
       }
 
       /* ===== MOBILE ===== */
@@ -199,6 +265,9 @@
         }
         .full {
           grid-column: span 1;
+        }
+        .section-title {
+          font-size: 16px;
         }
       }
 
@@ -594,6 +663,10 @@
         background: #eef3ff;
         transform: scale(1.01);
       }
+      
+      label{
+          font-weight: bolder ;
+      }
     </style>
   </head>
 
@@ -607,217 +680,262 @@
 
     <!-- FORM CARD -->
     <div class="container">
-      <div class="title">RMA Web Form</div>
+      <div class="title">
+          RMA Web Form
+          <div style="font-size :14px; color:black; font-weight:500; margin-top : 10px;" >
+              “CRS will not accept any parts w/o approval and RMA# provided” 
+          </div>
+      </div>
 
       <form id="rmaForm" novalidate>
-        <!-- COMPANY -->
-        <div class="field">
-          <label class="required">Company Name</label>
-          <input name="companyName" />
+        <!-- SECTION 1: REQUESTER INFO -->
+        <div class="form-section">
+          <div class="section-title">Requester Info</div>
+          <div class="form-grid">
+            <!-- RMA REQUEST TYPE -->
+            <div class="field">
+              <label class="required">RMA Request Type</label>
+              <select name="rmaRequestType" required>
+                <option value="Warranty Replacement">Warranty Replacement</option>
+                <option value="Warranty C.P.O">Warranty C.P.O</option>
+                <option value="Return for Credit">Return for Credit</option>
+                <option value="Warranty Return for Credit">
+                  Warranty Return for Credit
+                </option>
+              </select>
+            </div>
+
+            <!-- COMPANY NAME -->
+            <div class="field">
+              <label class="required">Company Name</label>
+              <input name="companyName" />
+            </div>
+
+            <!-- CUSTOMER NUMBER -->
+            <div class="field">
+              <label>Customer #</label>
+              <input name="customerNumber" />
+            </div>
+
+            <!-- CONTACT NAME -->
+            <div class="field">
+              <label class="required">Name</label>
+              <input name="contactName" required />
+            </div>
+
+            <!-- EMAIL -->
+            <div class="field">
+              <label class="required">Email</label>
+              <input name="email" type="email" />
+            </div>
+
+            <!-- PHONE -->
+            <div class="field">
+              <label class="required">Phone</label>
+              <input name="phone" />
+            </div>
+          </div>
         </div>
 
-        <!-- CONTACT NAME -->
-        <div class="field">
-          <label class="required">Name</label>
-          <input name="contactName" required />
+        <!-- SECTION 2: ORDER INFO -->
+        <div class="form-section">
+          <div class="section-title">Order Info</div>
+          <div class="form-grid">
+            <!-- SALES ORDER -->
+            <div class="field">
+              <label class="required">SO #</label>
+              <input name="salesOrderNumber" />
+            </div>
+
+            <!-- CUSTOMER PO -->
+            <div class="field">
+              <label class="required">Customer PO #</label>
+              <input name="customerPoNumber" />
+            </div>
+
+            <!-- ORIGINAL TRANSACTION DATE -->
+            <div class="field">
+              <label>Original Transaction Date</label>
+              <input
+                name="originalTransactionDate"
+                id="originalTransactionDate"
+                type="date"
+              />
+            </div>
+
+            <!-- ORIGINAL INVOICE -->
+            <div class="field">
+              <label>Original Invoice #</label>
+              <input name="originalInvoiceNumber" />
+            </div>
+          </div>
         </div>
 
-        <!-- RMA REQUEST TYPE -->
-        <div class="field">
-          <label class="required">RMA Request Type</label>
-          <select name="rmaRequestType" required>
-            <option value="">Select Type</option>
-            <option value="Warranty Replacement">Warranty Replacement</option>
-            <option value="Warranty C.P.O">Warranty C.P.O</option>
-            <option value="Return for Credit">Return for Credit</option>
-            <option value="Warranty Return for Credit">
-              Warranty Return for Credit
-            </option>
-          </select>
+        <!-- SECTION 3: PART INFO -->
+        <div class="form-section">
+          <div class="section-title">Part Info</div>
+          <div class="form-grid">
+              <!-- AIRCRAFT TYPE -->
+            <div class="field">
+              <label class="required">Aircraft Type</label>
+              <input name="aircraftType" />
+            </div>
+
+            <!-- AIRCRAFT SERIAL -->
+            <div class="field">
+              <label class="required">Aircraft Serial #</label>
+              <input name="aircraftSerialNumber" />
+            </div>
+            <!-- PART NUMBER -->
+            <div class="field">
+              <label class="required">Part Number (PN)</label>
+              <input name="partNumber" />
+            </div>
+
+            <!-- SERIAL NUMBER -->
+            <div class="field">
+              <label class="required">Serial Number (SN)</label>
+              <input name="serialNumber" />
+            </div>
+
+            <!-- INSTALL DATE -->
+            <div class="field">
+              <label class="required">Install Date</label>
+              <input name="installDate" id="installDate" type="date" />
+            </div>
+
+            <!-- TOTAL TIME -->
+            <div class="field">
+              <label class="required">Total Time Since Install (Days)</label>
+              <input
+                name="totalTimeSinceInstall"
+                id="totalTimeSinceInstall"
+                readonly
+              />
+            </div>
+
+            <!-- REMOVAL DATE -->
+            <div class="field">
+              <label>Removal Date</label>
+              <input name="removalDate" id="removalDate" type="date" />
+            </div>
+
+            <!-- TOTAL CYCLES -->
+            <div class="field">
+              <label class="required">Total Cycles Since Install</label>
+              <input
+                name="totalCyclesSinceInstall"
+                id="totalCyclesSinceInstall"
+                readonly
+              />
+            </div>
+            
+            <!-- DISCREPANCY -->
+            <div class="field full">
+              <label class="required">Discrepancy</label>
+              <textarea name="discrepancy" style="resize:none;"></textarea>
+            </div>
+          </div>
         </div>
 
-        <!-- EMAIL -->
-        <div class="field">
-          <label class="required">Email</label>
-          <input name="email" type="email" />
-        </div>
 
-        <!-- CUSTOMER NUMBER -->
-        <div class="field">
-          <label>Customer #</label>
-          <input name="customerNumber" />
-        </div>
 
-        <!-- PHONE -->
-        <div class="field">
-          <label class="required">Phone</label>
-          <input name="phone" />
-        </div>
+        <!-- SECTION 6: FILE ATTACHMENTS -->
+        <div class="form-section">
+          <div class="section-title">File Attachments</div>
+          <div class="form-grid">
+            <div class="field full">
+              <label>Attach Files (Optional)</label>
 
-        <!-- SALES ORDER -->
-        <div class="field">
-          <label class="required">SO #</label>
-          <input name="salesOrderNumber" />
-        </div>
-
-        <!-- CUSTOMER PO -->
-        <div class="field">
-          <label class="required">Customer PO #</label>
-          <input name="customerPoNumber" />
-        </div>
-
-        <!-- ORIGINAL TRANSACTION DATE -->
-        <div class="field">
-          <label>Original Transaction Date</label>
-          <input
-            name="originalTransactionDate"
-            id="originalTransactionDate"
-            type="date"
-          />
-        </div>
-
-        <!-- ORIGINAL INVOICE -->
-        <div class="field">
-          <label>Original Invoice #</label>
-          <input name="originalInvoiceNumber" />
-        </div>
-
-        <!-- PART NUMBER -->
-        <div class="field">
-          <label class="required">Part Number (PN)</label>
-          <input name="partNumber" />
-        </div>
-
-        <!-- AIRCRAFT TYPE -->
-        <div class="field">
-          <label class="required">Aircraft Type</label>
-          <input name="aircraftType" />
-        </div>
-
-        <!-- SERIAL NUMBER -->
-        <div class="field">
-          <label class="required">Serial Number (SN)</label>
-          <input name="serialNumber" />
-        </div>
-
-        <!-- AIRCRAFT SERIAL -->
-        <div class="field">
-          <label class="required">Aircraft Serial #</label>
-          <input name="aircraftSerialNumber" />
-        </div>
-
-        <!-- INSTALL DATE -->
-        <div class="field">
-          <label class="required">Install Date</label>
-          <input name="installDate" id="installDate" type="date" />
-        </div>
-
-        <!-- TOTAL TIME -->
-        <div class="field">
-          <label class="required">Total Time Since Install (Days)</label>
-          <input
-            name="totalTimeSinceInstall"
-            id="totalTimeSinceInstall"
-            readonly
-          />
-        </div>
-
-        <!-- REMOVAL DATE -->
-        <div class="field">
-          <label>Removal Date</label>
-          <input name="removalDate" id="removalDate" type="date" />
-        </div>
-
-        <!-- TOTAL CYCLES -->
-        <div class="field">
-          <label class="required">Total Cycles Since Install</label>
-          <input
-            name="totalCyclesSinceInstall"
-            id="totalCyclesSinceInstall"
-            readonly
-          />
-        </div>
-
-        <!-- DISCREPANCY -->
-        <div class="field full">
-          <label class="required">Discrepancy</label>
-          <textarea name="discrepancy"></textarea>
-        </div>
-
-        <!-- FILE ATTACHMENTS -->
-        <div class="field full">
-          <label>Attach Files (Optional)</label>
-
-          <!-- Upload Box Design -->
-          <label class="upload-box" style="margin-top: 5px">
-            <input
-              id="fileAttachment"
-              class="upload-input"
-              type="file"
-              multiple
-            />
-
-            <div class="upload-content" id="uploadContent">
-              <svg viewBox="0 0 24 24" style="width: 48px; height: 48px">
-                <path
-                  d="M5 20h14a1 1 0 0 0 1-1v-4h-2v3H6v-3H4v4a1 1 0 0 0 1 1z"
+              <!-- Upload Box Design -->
+              <label class="upload-box" style="margin-top: 5px">
+                <input
+                  id="fileAttachment"
+                  class="upload-input"
+                  type="file"
+                  multiple
                 />
-                <path d="M11 16h2V8h3l-4-4-4 4h3z" />
-              </svg>
-              <div class="upload-text">Click to upload files</div>
-              <div class="upload-subtext">Click or drag files here</div>
-            </div>
-          </label>
 
-          <!-- Validation message -->
-          <div
-            id="fileValidation"
-            class="validation-message"
-            style="display: none; margin-top: 5px"
-          ></div>
+                <div class="upload-content" id="uploadContent">
+                  <svg viewBox="0 0 24 24" style="width: 48px; height: 48px">
+                    <path
+                      d="M5 20h14a1 1 0 0 0 1-1v-4h-2v3H6v-3H4v4a1 1 0 0 0 1 1z"
+                    />
+                    <path d="M11 16h2V8h3l-4-4-4 4h3z" />
+                  </svg>
+                  <div class="upload-text">Click to upload files</div>
+                  <div class="upload-subtext">Click or drag files here</div>
+                </div>
+              </label>
 
-          <!-- Selected files display -->
-          <div
-            id="fileList"
-            class="file-list-container"
-            style="display: none; margin-top: 10px"
-          >
-            <div
-              style="
-                font-size: 13px;
-                font-weight: 600;
-                color: #444;
-                margin-bottom: 8px;
-              "
-            >
-              Selected Files:
-            </div>
-            <div
-              id="selectedFiles"
-              style="
-                max-height: 200px;
-                overflow-y: auto;
-                border: 1px solid #e0e0e0;
-                border-radius: 6px;
-                padding: 12px;
-                background: #f9f9f9;
-              "
-            >
-              <!-- Files will be listed here -->
+              <!-- Validation message -->
+              <div
+                id="fileValidation"
+                class="validation-message"
+                style="display: none; margin-top: 5px"
+              ></div>
+
+              <!-- Selected files display -->
+              <div
+                id="fileList"
+                class="file-list-container"
+                style="display: none; margin-top: 10px"
+              >
+                <div
+                  style="
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #444;
+                    margin-bottom: 8px;
+                  "
+                >
+                  Selected Files:
+                </div>
+                <div
+                  id="selectedFiles"
+                  style="
+                    max-height: 200px;
+                    overflow-y: auto;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 6px;
+                    padding: 12px;
+                    background: #f9f9f9;
+                  "
+                >
+                  <!-- Files will be listed here -->
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- TERMS -->
         <div class="disclaimer full">
-          <strong>Terms & Conditions</strong>
-          By submitting this form, you agree to our
-          <a
+          <strong>Disclaimer</strong>
+          <ol>
+              <li>
+                  CRS Jet Spares will not accept and units returned without a RMA Authorization Number.
+              </li>
+              <li>
+                  
+                All units must be returned within 7 days and accompanied with the original paperwork. Failure to do so may result in warranty denial.
+              </li>
+                <li>
+                    In the event of a no fault found or that failure is a result of improper use, customer will be responsible foy any charges incurred. CRS is not liable for any consequential expenses related to the warranty claim.
+                </li>
+                <li>
+                    A minimum 20% restocking fee applies on all returns. Any returns where packing has been opened recertification charged will also apply. 
+                </li>
+          </ol>
+          
+          <div>
+              I hereby affirm all information regarding the above mentioned components including total time, if any and cycles to be true and correct. By submitting the information in the RMA Request form, you are agreeing to the  listed on the 
+              <a
             href="https://crsjetspares.com/general-terms-and-conditions-for-sale-and-exchange-of-goods/"
-            target="_blank"
-          >
+            target="_blank">
             Terms and Conditions </a
-          >. All information provided must be accurate and complete.
+          >.CRS Jet Spares invoice and website.
+          </div>
         </div>
 
         <div class="submit-wrap">
@@ -1679,7 +1797,7 @@
             if (!firstInvalidField) firstInvalidField = field;
             field.style.border = "1px solid #d93025";
           } else {
-            field.style.border = "none";
+            field.style.border = "1px solid #d0d7e5";
           }
         });
 
@@ -1923,7 +2041,7 @@
         const inputs = form.querySelectorAll("input, select, textarea");
         inputs.forEach((input) => {
           input.addEventListener("input", function () {
-            this.style.border = "none";
+            this.style.border = "1px solid #d0d7e5";
           });
         });
 
