@@ -300,6 +300,14 @@
         animation: modalSlideIn 0.3s ease-out;
       }
 
+      .modal-content.image-only {
+        background: transparent;
+        padding: 0;
+        max-width: none;
+        width: auto;
+        box-shadow: none;
+      }
+
       @keyframes modalSlideIn {
         from {
           transform: translateY(-50px);
@@ -324,9 +332,23 @@
         color: #dc3545;
       }
 
+      .modal-image {
+        max-width: 100%;
+        height: auto;
+        margin-bottom: 16px;
+      }
+
+      .modal-full-image {
+        max-width: 90%;
+        width: auto;
+        height: auto;
+        cursor: pointer;
+        border-radius: 12px;
+      }
+
       .modal-title {
-        font-size: clamp(18px, 4vw, 22px);
-        font-weight: 600;
+        font-size: clamp(18px, 4vw, 18px);
+        font-weight: 300;
         color: #0a2a43;
         margin-bottom: 12px;
       }
@@ -413,6 +435,24 @@
         font-weight: 600;
         color: #0a2a43;
         margin-bottom: 20px;
+      }
+
+      .progress-steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+      }
+
+      .progress-step-image {
+        max-height: 50px;
+        width: auto;
+      }
+
+      .progress-separator {
+        max-height: 20px;
+        width: auto;
+        margin: 0 10px;
       }
 
       .progress-container {
@@ -956,12 +996,12 @@
     <!-- Loading Modal -->
     <div id="loadingModal" class="loading-overlay">
       <div class="loading-content">
-        <div class="loading-spinner"></div>
         <div id="loadingText" class="loading-text">Processing...</div>
-        <div class="progress-container">
-          <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+        <div class="progress-steps">
+          <img id="verifyingIcon" src="assets/VerifyingSalesOrder.png" class="progress-step-image" alt="Verifying" />
+          <img id="separator" src="assets/SeparatorGrey.png" class="progress-separator" alt="Separator" />
+          <img id="preparingIcon" src="assets/PreparingSubmissionGrey.png" class="progress-step-image" alt="Preparing" />
         </div>
-        <div id="progressLabel" class="progress-label">0%</div>
       </div>
     </div>
 
@@ -1437,20 +1477,42 @@
       // ================= MODAL FUNCTIONS =================
       function showModal(type, title, message, onClose) {
         const modal = document.getElementById("modal");
+        const modalContent = modal.querySelector('.modal-content');
+
+        // Always use standard modal layout
+        modalContent.className = 'modal-content';
+
         const modalIcon = document.getElementById("modalIcon");
         const modalTitle = document.getElementById("modalTitle");
         const modalMessage = document.getElementById("modalMessage");
 
-        if (type === "success") {
-          modalIcon.innerHTML = "✓";
-          modalIcon.className = "modal-icon success";
-        } else {
-          modalIcon.innerHTML = "✕";
-          modalIcon.className = "modal-icon error";
+        // Reset to standard layout if it was changed
+        if (!modalIcon) {
+          modalContent.innerHTML = `
+            <div id="modalIcon" class="modal-icon"></div>
+            <div id="modalTitle" class="modal-title"></div>
+            <div id="modalMessage" class="modal-message"></div>
+            <button class="modal-btn" onclick="closeModal()">OK</button>
+          `;
         }
 
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
+        const icon = document.getElementById('modalIcon');
+        const titleEl = document.getElementById('modalTitle');
+        const messageEl = document.getElementById('modalMessage');
+
+        if (type === 'success') {
+          icon.innerHTML = '<img src="assets/Success.png" class="modal-image" alt="Success" />';
+          icon.className = '';
+        } else if (type === 'crs-not-found') {
+          icon.innerHTML = '<img src="assets/NotFound.png" class="modal-image" alt="Not Found" />';
+          icon.className = '';
+        } else {
+          icon.innerHTML = '✕';
+          icon.className = 'modal-icon error';
+        }
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
         modal.className = "modal-overlay show";
 
         window.modalOnClose = onClose;
@@ -1467,26 +1529,49 @@
       }
 
       // ================= LOADING FUNCTIONS =================
-      function showLoading(text, progress) {
+      function showLoading(text, stage) {
         const loadingModal = document.getElementById("loadingModal");
         const loadingText = document.getElementById("loadingText");
-        const progressBar = document.getElementById("progressBar");
-        const progressLabel = document.getElementById("progressLabel");
+        const verifyingIcon = document.getElementById("verifyingIcon");
+        const separator = document.getElementById("separator");
+        const preparingIcon = document.getElementById("preparingIcon");
 
         loadingText.textContent = text;
-        progressBar.style.width = progress + "%";
-        progressLabel.textContent = progress + "%";
+
+        // Reset to initial state
+        verifyingIcon.src = 'assets/VerifyingSalesOrder.png';
+        separator.src = 'assets/SeparatorGrey.png';
+        preparingIcon.src = 'assets/PreparingSubmissionGrey.png';
+
         loadingModal.className = "loading-overlay show";
       }
 
-      function updateLoading(text, progress) {
+      function updateLoading(text, stage) {
         const loadingText = document.getElementById("loadingText");
-        const progressBar = document.getElementById("progressBar");
-        const progressLabel = document.getElementById("progressLabel");
+        const verifyingIcon = document.getElementById("verifyingIcon");
+        const separator = document.getElementById("separator");
+        const preparingIcon = document.getElementById("preparingIcon");
 
         loadingText.textContent = text;
-        progressBar.style.width = progress + "%";
-        progressLabel.textContent = progress + "%";
+
+        // Update icons based on stage
+        if (stage === 'verifying') {
+          verifyingIcon.src = 'assets/VerifyingSalesOrder.png';
+          separator.src = 'assets/SeparatorGrey.png';
+          preparingIcon.src = 'assets/PreparingSubmissionGrey.png';
+        } else if (stage === 'verified') {
+          verifyingIcon.src = 'assets/VerifyingSalesOrder.png';
+          separator.src = 'assets/SeparatorBlue.png';
+          preparingIcon.src = 'assets/PreparingSubmissionGrey.png';
+        } else if (stage === 'preparing') {
+          verifyingIcon.src = 'assets/VerifyingSalesOrder.png';
+          separator.src = 'assets/SeparatorBlue.png';
+          preparingIcon.src = 'assets/PreparingSubmissionGrey.png';
+        } else if (stage === 'complete') {
+          verifyingIcon.src = 'assets/VerifyingSalesOrder.png';
+          separator.src = 'assets/SeparatorBlue.png';
+          preparingIcon.src = 'assets/PreparingSubmission.png';
+        }
       }
 
       function hideLoading() {
@@ -1951,15 +2036,14 @@
 
         // Disable submit button and show loading
         submitBtn.disabled = true;
-        showLoading("Authenticating...", 0);
+        showLoading("Verifying Sales Order...", "verifying");
 
         try {
           // Step 1: Get access token
-          updateLoading("Authenticating with Salesforce...", 10);
           const accessToken = await getAccessToken();
+          updateLoading("Verifying Sales Order...", "verifying");
 
           // Step 2: Verify Sales Order
-          updateLoading("Verifying Sales Order...", 30);
           const verificationResult = await verifySalesOrder(
             salesOrderNumber,
             accessToken
@@ -1968,16 +2052,18 @@
           if (!verificationResult.salesOrderExists) {
             hideLoading();
             showModal(
-              "error",
-              "Sales Order Not Found",
-              "The Sales Order number does not exist in our system."
+              "crs-not-found",
+              "CRS Order Not found",
+              "Sales Order number entered does not match as records."
             );
             submitBtn.disabled = false;
             return;
           }
 
+          updateLoading("Sales Order Verified", "verified");
+
           // Step 3: Get Record Type ID
-          updateLoading("Preparing submission...", 50);
+          updateLoading("Preparing Submission...", "preparing");
           const recordTypeId = await getRecordTypeId(accessToken);
 
           // Step 4: Prepare form data
@@ -2033,19 +2119,17 @@
           console.log("Form data prepared for submission:", formData);
 
           // Step 5: Create Case
-          updateLoading("Creating RMA case...", 70);
+          updateLoading("Creating Case in Salesforce...", "preparing");
           const caseId = await createCase(formData, accessToken);
 
           // Step 6: Upload files if any
           if (allSelectedFiles.length > 0) {
-            updateLoading(`Uploading ${allSelectedFiles.length} file(s)...`, 80);
+            updateLoading(`Uploading Files...`, "preparing");
 
             for (let i = 0; i < allSelectedFiles.length; i++) {
-              const progress =
-                80 + Math.round(((i + 1) / allSelectedFiles.length) * 15);
               updateLoading(
                 `Uploading file ${i + 1} of ${allSelectedFiles.length}...`,
-                progress
+                "preparing"
               );
 
               try {
@@ -2061,13 +2145,13 @@
           }
 
           // Step 7: Complete
-          updateLoading("Submission complete!", 100);
+          updateLoading("Submission Complete", "complete");
           setTimeout(() => {
             hideLoading();
             showModal(
               "success",
-              "Thank You!",
-              "Your RMA form has been submitted successfully.",
+              "Form Successfully Submitted",
+              "",
               function () {
                 // Reset form
                 form.reset();
