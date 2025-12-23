@@ -819,46 +819,65 @@
 
     
     <script>
-              // ================= CONFIGURATION =================
-      const CLIENT_ID = "3MVG9O_Hkc8TP1aFEeEWU9ZyX2f05bkHPl2XawuPFSJwal8ZF1mDPue9o0kPDBVcOU64PRCCEZnQq2aIJmKv5";
-      const CLIENT_SECRET = "4DA156C1380C7AA53FCE2C408620F764D3D46C7C4453D58077B173206EA351C5";
-      const SF_INSTANCE = "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com";
-      const OAUTH_URL = SF_INSTANCE + "/services/oauth2/token";
-      const API_ENDPOINT = SF_INSTANCE + "/services/apexrest/caseManagement/";
-      
-      const rmaSettings = getAttachmentValidations();
-        
-async function getAttachmentValidations(){
-    const query = "SELECT File_Formats__c, Maximum_Size__c FROM FilesAttachmentSettings__mdt WHERE DeveloperName = 'RMASetting'"
-    const url = SF_INSTANCE + '/services/data/v62.0/query?q=' + encodeURIComponent(query);
-    
-    const accessToken = await getAccessToken();
+      // ================= CONFIGURATION =================
+const CLIENT_ID = "3MVG9O_Hkc8TP1aFEeEWU9ZyX2f05bkHPl2XawuPFSJwal8ZF1mDPue9o0kPDBVcOU64PRCCEZnQq2aIJmKv5";
+const CLIENT_SECRET = "4DA156C1380C7AA53FCE2C408620F764D3D46C7C4453D58077B173206EA351C5";
+const SF_INSTANCE = "https://prod-avs-crsjetspares--crsdev25.sandbox.my.salesforce.com";
+const OAUTH_URL = SF_INSTANCE + "/services/oauth2/token";
+const API_ENDPOINT = SF_INSTANCE + "/services/apexrest/caseManagement/";
 
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-        'Authorization': 'Bearer ' + accessToken,
-        'Content-Type': 'application/json'
+// Initialize with default values - will be updated dynamically
+let rmaSettings = {
+    Maximum_Size__c: 5, // Default 5MB
+    File_Formats__c: [] // Default empty array
+};
+
+// ================= GET ATTACHMENT VALIDATIONS =================
+async function getAttachmentValidations(accessToken) {
+    try {
+        const query = "SELECT File_Formats__c, Maximum_Size__c FROM FilesAttachmentSettings__mdt WHERE DeveloperName = 'CoreCardSetting'";
+        const url = SF_INSTANCE + '/services/data/v62.0/query?q=' + encodeURIComponent(query);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to query attachment settings');
         }
-    });
 
-    if (!response.ok) {
-        throw new Error('Failed to fetch the RMA Settings');
-    }
-
-    const data = await response.json();
-    if (data.records && data.records.length > 0) {
+        const data = await response.json();
+        if (data.records && data.records.length > 0) {
+            return {
+                Maximum_Size__c: data.records[0].Maximum_Size__c || 5,
+                File_Formats__c: data.records[0].File_Formats__c ? 
+                    data.records[0].File_Formats__c.split(',').map(item => item.trim().toLowerCase()) : 
+                    []
+            };
+        } else {
+            console.warn('Attachment settings not found, using defaults');
+            return {
+                Maximum_Size__c: 5,
+                File_Formats__c: []
+            };
+        }
+    } catch (error) {
+        console.error('Error fetching attachment validations:', error);
+        // Return defaults on error
         return {
-            data.records[0].File_Formats__c,
-            data.records[0].Maximum_Size__c
+            Maximum_Size__c: 5,
+            File_Formats__c: []
         };
-    } else {
-        throw new Error('Attachment settings not found ');
     }
 }
 
+
       // ================= FILE VALIDATION CONSTANTS =================
-      const MAX_FILE_SIZE = rmaSettings.Maximum_Size__c * 1024 * 1024; 
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; 
       const MAX_FILE_COUNT = 100000;
       
       // ================= FILE UTILITY FUNCTIONS =================
@@ -902,48 +921,51 @@ async function getAttachmentValidations(){
       }
       
       function validateFiles(files) {
-        const validation = {
-          valid: true,
-          errors: [],
-          oversizedFiles: [],
-          totalSize: 0,
-          validFiles: []
-        };
+    const validation = {
+        valid: true,
+        errors: [],
+        oversizedFiles: [],
+        totalSize: 0,
+        validFiles: []
+    };
+    
+    // Check file count
+    if (files.length > MAX_FILE_COUNT) {
+        validation.valid = false;
+        validation.errors.push(`Maximum ${MAX_FILE_COUNT} files allowed. You selected ${files.length} files.`);
+    }
+    
+    // Check each file
+    Array.from(files).forEach((file, index) => {
+        const fileExtension = file.name.split('.').pop().toLowerCase();
         
-        // Check file count
-        if (files.length > MAX_FILE_COUNT) {
-          validation.valid = false;
-          validation.errors.push(`Maximum ${MAX_FILE_COUNT} files allowed. You selected ${files.length} files.`);
-        }
-        
-        // Check each file
-        Array.from(files).forEach((file, index) => {
-          if (file.size > MAX_FILE_SIZE) {
+        if (file.size > MAX_FILE_SIZE) {
             validation.valid = false;
             validation.oversizedFiles.push({
-              name: file.name,
-              size: file.size,
-              index: index
+                name: file.name,
+                size: file.size,
+                index: index
             });
-            validation.errors.push(`"${file.name}" exceeds "${rmaSettings.Maximum_Size__c}"MB limit (${formatFileSize(file.size)})`);
-          } 
-          else if( !rmaSettings.File_Formats__c.includes( file.name.split('.').pop().toLowerCase() ) ){
-              validation.valid = false;
+            validation.errors.push(`"${file.name}" exceeds ${rmaSettings.Maximum_Size__c}MB limit (${formatFileSize(file.size)})`);
+        } 
+        else if (rmaSettings.File_Formats__c.length > 0 && 
+                 !rmaSettings.File_Formats__c.includes(fileExtension)) {
+            validation.valid = false;
             validation.oversizedFiles.push({
-              name: file.name,
-              size: file.size,
-              index: index
+                name: file.name,
+                size: file.size,
+                index: index
             });
-            validation.errors.push(`Please add a file with these "${rmaSettings.File_Formats__c}" extensions only.`);
-          }
-          else {
+            validation.errors.push(`"${file.name}" has an invalid file type. Allowed types: ${rmaSettings.File_Formats__c.join(', ')}`);
+        }
+        else {
             validation.validFiles.push(file);
             validation.totalSize += file.size;
-          }
-        });
-        
-        return validation;
-      }
+        }
+    });
+    
+    return validation;
+}
       
       function showFileValidationError(message) {
         const validationDiv = document.getElementById('fileValidation');
@@ -999,6 +1021,13 @@ async function getAttachmentValidations(){
               fileListContainer.style.display = 'none';
               return;
             }
+          }
+
+          
+
+          // Show errors for oversized/invalid files
+          if (validation.oversizedFiles.length > 0) {
+              showFileValidationError(`${validation.oversizedFiles.length} file(s) exceed ${rmaSettings.Maximum_Size__c}MB limit or have invalid formats and were not added.`);
           }
           
           // Update upload box appearance
@@ -1712,27 +1741,43 @@ async function getAttachmentValidations(){
       }
 
       // ================= INITIALIZATION =================
-      document.addEventListener("DOMContentLoaded", function() {
-        // Setup date calculations
-        setupDateCalculations();
-        
-        // Setup form submission
-        const form = document.getElementById("rmaForm");
-        form.addEventListener("submit", handleFormSubmit);
-        
-        // Setup input validation styling
-        const inputs = form.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-          input.addEventListener('input', function() {
+document.addEventListener("DOMContentLoaded", async function() {
+    // Setup date calculations
+    setupDateCalculations();
+    
+    // Setup form submission
+    const form = document.getElementById("rmaForm");
+    form.addEventListener("submit", handleFormSubmit);
+    
+    // Setup input validation styling
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
             this.style.border = 'none';
-          });
         });
+    });
+    
+    // Setup file upload functionality
+    const fileInput = document.getElementById('fileAttachment');
+    fileInput.addEventListener('change', displaySelectedFiles);
+    setupDragAndDrop();
+    
+    // Load attachment settings dynamically
+    try {
+        const accessToken = await getAccessToken();
+        rmaSettings = await getAttachmentValidations(accessToken);
+        MAX_FILE_SIZE = rmaSettings.Maximum_Size__c * 1024 * 1024;
         
-        // Setup file upload functionality
-        const fileInput = document.getElementById('fileAttachment');
-        fileInput.addEventListener('change', displaySelectedFiles);
-        setupDragAndDrop();
-      });
+        // Update the upload subtext with dynamic values
+        const uploadSubtext = document.querySelector('.upload-subtext');
+        if (uploadSubtext) {
+            uploadSubtext.textContent = `Max ${MAX_FILE_COUNT} files, ${rmaSettings.Maximum_Size__c}MB each${rmaSettings.File_Formats__c.length > 0 ? `, allowed formats: ${rmaSettings.File_Formats__c.join(', ')}` : ''}`;
+        }
+    } catch (error) {
+        console.error('Failed to load attachment settings:', error);
+        // Continue with defaults
+    }
+});
     </script>
   </body>
 </html>
