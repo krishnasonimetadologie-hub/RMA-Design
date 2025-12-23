@@ -1261,11 +1261,22 @@
         const validationDiv = document.getElementById("fileValidation");
         const uploadBox = document.querySelector(".upload-box");
 
-        // Clear validation
+        // Clear validation first
         validationDiv.style.display = "none";
         uploadBox.classList.remove("error");
 
         if (allSelectedFiles.length > 0) {
+          // Calculate total size and check for validation errors
+          let totalSize = 0;
+          allSelectedFiles.forEach(file => totalSize += file.size);
+
+          // Check if total size exceeds limit
+          if (fileSettingsLoaded && totalSize > MAX_FILE_SIZE) {
+            showFileValidationError(
+              `Total file size (${formatFileSize(totalSize)}) exceeds maximum allowed (${formatFileSize(MAX_FILE_SIZE)})`
+            );
+          }
+
           // Update upload box appearance
           uploadContent.innerHTML = `
               <svg viewBox="0 0 24 24" style="width: 48px; height: 48px;">
@@ -1443,14 +1454,10 @@
           e.preventDefault();
           uploadBox.classList.remove("drag-over");
 
-          const files = e.dataTransfer.files;
+          const newFiles = Array.from(e.dataTransfer.files);
 
-          // Validate new files before adding
-          const validation = validateFiles(files);
-
-          // Check if adding new files would exceed limit
-          const totalFilesAfterAdd =
-            allSelectedFiles.length + validation.validFiles.length;
+          // Check if adding new files would exceed count limit
+          const totalFilesAfterAdd = allSelectedFiles.length + newFiles.length;
           if (totalFilesAfterAdd > MAX_FILE_COUNT) {
             showFileValidationError(
               `Cannot add files. Maximum ${MAX_FILE_COUNT} files allowed. You would have ${totalFilesAfterAdd} files.`
@@ -1458,8 +1465,25 @@
             return;
           }
 
-          // Add valid files (excluding duplicates)
-          validation.validFiles.forEach((newFile) => {
+          // Check for invalid format files first
+          const invalidFormatFiles = [];
+          newFiles.forEach((file) => {
+            const fileExt = getFileExtension(file.name);
+            if (fileSettingsLoaded && ALLOWED_FILE_FORMATS.length > 0 && !ALLOWED_FILE_FORMATS.includes(fileExt)) {
+              invalidFormatFiles.push(file.name);
+            }
+          });
+
+          // Show error for invalid format files and don't add them
+          if (invalidFormatFiles.length > 0) {
+            showFileValidationError(
+              `${invalidFormatFiles.length} file(s) have invalid format and were not added. Allowed formats: ${ALLOWED_FILE_FORMATS.join(', ').toUpperCase()}`
+            );
+            return;
+          }
+
+          // Add all new valid-format files to our tracked list
+          newFiles.forEach((newFile) => {
             // Check if file already exists
             const isDuplicate = allSelectedFiles.some(
               (existingFile) =>
@@ -1476,14 +1500,7 @@
           // Update the file input
           updateFileInputWithAllFiles();
 
-          // Show errors for invalid format files
-          if (validation.invalidFormatFiles && validation.invalidFormatFiles.length > 0) {
-            showFileValidationError(
-              `${validation.invalidFormatFiles.length} file(s) have invalid format and were not added. Allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
-            );
-          }
-
-          // Trigger display update
+          // Trigger display update (validation will be shown in displaySelectedFiles)
           displaySelectedFiles();
         });
       }
@@ -2220,7 +2237,7 @@
             return; // User canceled the file selection
           }
 
-          // Check if adding new files would exceed limit
+          // Check if adding new files would exceed count limit
           const totalFilesAfterAdd = allSelectedFiles.length + newFiles.length;
           if (totalFilesAfterAdd > MAX_FILE_COUNT) {
             showFileValidationError(
@@ -2229,11 +2246,25 @@
             return;
           }
 
-          // Validate new files
-          const validation = validateFiles(newFiles);
+          // Check for invalid format files first
+          const invalidFormatFiles = [];
+          newFiles.forEach((file) => {
+            const fileExt = getFileExtension(file.name);
+            if (fileSettingsLoaded && ALLOWED_FILE_FORMATS.length > 0 && !ALLOWED_FILE_FORMATS.includes(fileExt)) {
+              invalidFormatFiles.push(file.name);
+            }
+          });
 
-          // Add valid files to our tracked list
-          validation.validFiles.forEach((newFile) => {
+          // Show error for invalid format files and don't add them
+          if (invalidFormatFiles.length > 0) {
+            showFileValidationError(
+              `${invalidFormatFiles.length} file(s) have invalid format and were not added. Allowed formats: ${ALLOWED_FILE_FORMATS.join(', ').toUpperCase()}`
+            );
+            return;
+          }
+
+          // Add all new valid-format files to our tracked list
+          newFiles.forEach((newFile) => {
             // Check if file already exists (by name, size, and lastModified)
             const isDuplicate = allSelectedFiles.some(
               (existingFile) =>
@@ -2247,17 +2278,10 @@
             }
           });
 
-          // Show errors for invalid format files
-          if (validation.invalidFormatFiles && validation.invalidFormatFiles.length > 0) {
-            showFileValidationError(
-              `${validation.invalidFormatFiles.length} file(s) have invalid format and were not added. Allowed formats: ${ALLOWED_FILE_FORMATS.join(', ')}`
-            );
-          }
-
           // Update the file input with all files
           updateFileInputWithAllFiles();
 
-          // Display the updated file list
+          // Display the updated file list (validation will be shown in displaySelectedFiles)
           displaySelectedFiles();
         });
 
