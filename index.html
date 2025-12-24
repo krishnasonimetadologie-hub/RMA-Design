@@ -1785,12 +1785,18 @@
       }
 
       async function verifySalesOrder(salesOrderNumber, customerPoNumber, accessToken) {
-        // Build query parameters based on what was provided
+        // Build query parameters based on the logic:
+        // 1. If both are provided, only check SO #
+        // 2. If only SO # is provided, check SO #
+        // 3. If only Customer PO # is provided, check Customer PO #
+
         let queryParams = [];
+
         if (salesOrderNumber) {
+          // If SO # is provided (with or without Customer PO), only check SO #
           queryParams.push("salesOrderNumber=" + encodeURIComponent(salesOrderNumber));
-        }
-        if (customerPoNumber) {
+        } else if (customerPoNumber) {
+          // If only Customer PO # is provided (no SO #), check Customer PO #
           queryParams.push("customerPoNumber=" + encodeURIComponent(customerPoNumber));
         }
 
@@ -2094,11 +2100,12 @@
 
         // Disable submit button and show loading
         submitBtn.disabled = true;
-        const loadingMessage = salesOrderNumber && customerPoNumber
-          ? "Verifying Sales Order and Customer PO..."
-          : salesOrderNumber
-            ? "Verifying Sales Order..."
-            : "Verifying Customer PO...";
+        // Determine loading message based on what will be validated
+        // If SO # is provided (with or without Customer PO), we validate SO #
+        // If only Customer PO # is provided, we validate Customer PO #
+        const loadingMessage = salesOrderNumber
+          ? "Verifying Sales Order..."
+          : "Verifying Customer PO...";
         showLoading(loadingMessage, "verifying");
 
         try {
@@ -2106,7 +2113,7 @@
           const accessToken = await getAccessToken();
           updateLoading(loadingMessage, "verifying");
 
-          // Step 2: Verify Sales Order and/or Customer PO
+          // Step 2: Verify Sales Order or Customer PO based on logic
           const verificationResult = await verifySalesOrder(
             salesOrderNumber,
             customerPoNumber,
@@ -2116,15 +2123,15 @@
           if (!verificationResult.salesOrderExists) {
             hideLoading();
 
-            // Determine error message based on what was entered
+            // Determine error message based on what was validated
             let errorTitle = "CRS Order Not found";
             let errorMessage = "";
 
-            if (salesOrderNumber && customerPoNumber) {
-              errorMessage = "Sales Order number and Customer PO Number entered do not match our records";
-            } else if (salesOrderNumber) {
+            if (salesOrderNumber) {
+              // If SO # was provided (with or without Customer PO), SO # was validated
               errorMessage = "Sales Order number entered does not match our records";
             } else {
+              // If only Customer PO # was provided, Customer PO was validated
               errorMessage = "Customer PO Number entered does not match our records";
             }
 
@@ -2137,11 +2144,9 @@
             return;
           }
 
-          const verifiedMessage = salesOrderNumber && customerPoNumber
-            ? "Sales Order and Customer PO Verified"
-            : salesOrderNumber
-              ? "Sales Order Verified"
-              : "Customer PO Verified";
+          const verifiedMessage = salesOrderNumber
+            ? "Sales Order Verified"
+            : "Customer PO Verified";
           updateLoading(verifiedMessage, "verified");
 
           // Step 3: Get Record Type ID
