@@ -753,13 +753,13 @@
             <!-- COMPANY NAME -->
             <div class="field">
               <label class="required">Company Name</label>
-              <input name="companyName" />
+              <input name="companyName" required />
             </div>
 
             <!-- EMAIL -->
             <div class="field">
               <label class="required">Email</label>
-              <input name="email" type="email" />
+              <input name="email" type="email" required />
             </div>
             
             
@@ -776,7 +776,7 @@
             <!-- PHONE -->
             <div class="field">
               <label class="required">Phone</label>
-              <input name="phone" />
+              <input name="phone" required />
             </div>
           </div>
         </div>
@@ -788,7 +788,7 @@
             <!-- SALES ORDER -->
             <div class="field">
               <label class="required">SO #</label>
-              <input name="salesOrderNumber" />
+              <input name="salesOrderNumber" required />
             </div>
 
             <!-- ORIGINAL TRANSACTION DATE -->
@@ -804,7 +804,7 @@
             <!-- CUSTOMER PO -->
             <div class="field">
               <label class="required">Customer PO #</label>
-              <input name="customerPoNumber" />
+              <input name="customerPoNumber" required />
             </div>
 
             <!-- ORIGINAL INVOICE -->
@@ -823,19 +823,19 @@
               <!-- PART NUMBER -->
             <div class="field">
               <label class="required">Part Number (PN)</label>
-              <input name="partNumber" />
+              <input name="partNumber" required />
             </div>
             
             <!-- AIRCRAFT TYPE -->
             <div class="field">
               <label class="required">Aircraft Type</label>
-              <input name="aircraftType" />
+              <input name="aircraftType" required />
             </div>
 
             <!-- SERIAL NUMBER -->
             <div class="field">
               <label class="required">Serial Number (SN)</label>
-              <input name="serialNumber" />
+              <input name="serialNumber" required />
             </div>
               
 
@@ -843,14 +843,14 @@
             <!-- AIRCRAFT SERIAL -->
             <div class="field">
               <label class="required">Aircraft Serial #</label>
-              <input name="aircraftSerialNumber" />
+              <input name="aircraftSerialNumber" required />
             </div>
             
 
             <!-- INSTALL DATE -->
             <div class="field">
               <label class="required">Install Date</label>
-              <input name="installDate" id="installDate" type="date" />
+              <input name="installDate" id="installDate" type="date" required />
             </div>
 
             <!-- TOTAL TIME -->
@@ -871,7 +871,7 @@
 
             <!-- TOTAL CYCLES -->
             <div class="field">
-              <label class="required">Total Cycles Since Install</label>
+              <label>Total Cycles Since Install</label>
               <input
                 name="totalCyclesSinceInstall"
                 id="totalCyclesSinceInstall"
@@ -882,7 +882,7 @@
             <!-- DISCREPANCY -->
             <div class="field full">
               <label class="required">Discrepancy</label>
-              <textarea name="discrepancy" style="resize:none;"></textarea>
+              <textarea name="discrepancy" style="resize:none;" required></textarea>
             </div>
           </div>
         </div>
