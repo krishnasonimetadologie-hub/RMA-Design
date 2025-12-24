@@ -2144,6 +2144,13 @@
             return;
           }
 
+          // Auto-populate Sales Order Number from Customer PO if available
+          let finalSalesOrderNumber = salesOrderNumber;
+          if (!salesOrderNumber && customerPoNumber && verificationResult.salesOrderNumber) {
+            // Customer PO was entered and it has an associated Sales Order
+            finalSalesOrderNumber = verificationResult.salesOrderNumber;
+          }
+
           const verifiedMessage = salesOrderNumber
             ? "Sales Order Verified"
             : "Customer PO Verified";
@@ -2167,7 +2174,7 @@
               .querySelector('[name="customerNumber"]')
               .value.trim(),
             phone: form.querySelector('[name="phone"]').value.trim(),
-            salesOrderNumber: salesOrderNumber || null,
+            salesOrderNumber: finalSalesOrderNumber || null,
             customerPoNumber: customerPoNumber || null,
             originalTransactionDate: form.querySelector(
               '[name="originalTransactionDate"]'
