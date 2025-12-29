@@ -1609,8 +1609,8 @@
 
       // ================= UTILITY FUNCTIONS =================
       function extractSO(value) {
-        const match = value.match(/SO-\d+/i);
-        return match ? match[0].toUpperCase() : null;
+          const match = value.match(/SO-[A-Z0-9]+/i);
+          return match ? match[0].toUpperCase() : null;
       }
 
       // Convert HTML5 date input (YYYY-MM-DD) to Salesforce format (YYYY-MM-DD)
